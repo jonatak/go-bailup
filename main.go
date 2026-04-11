@@ -1,40 +1,37 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
-	"github.com/jonatak/go-bailup/internal/bailup"
+	"github.com/alecthomas/kong"
+	"github.com/jonatak/go-bailup/cmd"
+	"github.com/jonatak/go-bailup/internal/app"
 )
 
 func main() {
 	fmt.Println("Welcome to bailup.")
 
-	bailupEmail := os.Getenv("BAILUP_EMAIL")
-	bailupPassword := os.Getenv("BAILUP_PASS")
-	bailupRegulation := os.Getenv("BAILUP_REGULATION")
+	appCtx, err := app.NewApp()
 
-	if bailupEmail == "" || bailupPassword == "" || bailupRegulation == "" {
-		fmt.Println("env var BAILUP_EMAIL, BAILUP_PASS, BAILUP_REGULATION need to be set")
-		return
-	}
-
-	bailup := bailup.NewBailup(bailupEmail, bailupPassword, bailupRegulation)
-	err := bailup.Connect()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "an error occured: %v\n", err)
+		if errors.Is(err, app.InitError) {
+			fmt.Fprintln(os.Stderr, app.InitError)
+		}
 		return
 	}
 
-	if !bailup.IsConnected() {
+	if !appCtx.BailUp.IsConnected() {
 		fmt.Println("Disconnected")
 	}
 
-	state, err := bailup.GetState()
+	ctx := kong.Parse(&cmd.CLI, kong.Bind(appCtx))
+
+	err = ctx.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "an error occured: %v\n", err)
 		return
 	}
 
-	fmt.Println(state)
 }

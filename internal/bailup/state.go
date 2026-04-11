@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/jonatak/go-bailup/internal/bailup/model"
 )
 
-func (b *Bailup) GetState() (*State, error) {
+func (b *Bailup) GetState() (*model.State, error) {
 	if !b.IsConnected() {
 		return nil, NewBailupError("cannot fetch regulation state: client is not connected", nil)
 	}
@@ -41,7 +43,7 @@ func (b *Bailup) GetState() (*State, error) {
 	}
 
 	decoder := json.NewDecoder(resp.Body)
-	var response Response
+	var response model.Response
 	if err := decoder.Decode(&response); err != nil {
 		return nil, NewBailupError("could not decode regulation state response", err)
 	}

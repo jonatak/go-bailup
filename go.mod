@@ -3,6 +3,7 @@ module github.com/jonatak/go-bailup
 go 1.26.2
 
 require (
+	github.com/alecthomas/kong v1.15.0 // indirect
 	github.com/antchfx/htmlquery v1.3.6 // indirect
 	github.com/antchfx/xpath v1.3.6 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
