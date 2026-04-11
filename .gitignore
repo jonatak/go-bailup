@@ -1,0 +1,22 @@
+# Build directories
+bin/
+
+# Output of the go coverage tool
+*.coverprofile
+
+# Dependency directories (remove the comment if vendoring is used)
+/vendor/
+
+# Go workspace file
+go.work
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment files
+.env
+.envrc
