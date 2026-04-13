@@ -1,22 +1,29 @@
 package bailup
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/jonatak/go-bailup/internal/bailup/command"
 	"github.com/jonatak/go-bailup/internal/bailup/model"
 )
 
-func (b *Bailup) GetState() (*model.State, error) {
+func (b *Bailup) Execute(cmd command.JSONCommand) (*model.State, error) {
 	if !b.IsConnected() {
 		return nil, NewBailupError("cannot fetch regulation state: client is not connected", nil)
+	}
+
+	payload, err := cmd.ToJSON()
+	if err != nil {
+		return nil, NewBailupError("cannot serialise command", err)
 	}
 
 	req, err := http.NewRequest(
 		http.MethodPost,
 		fmt.Sprintf("%s/api-client/regulations/%s", bailupWebsite, b.regulation),
-		nil,
+		bytes.NewBuffer(payload),
 	)
 	if err != nil {
 		return nil, NewBailupError("could not build regulation state request", err)
@@ -49,4 +56,8 @@ func (b *Bailup) GetState() (*model.State, error) {
 	}
 
 	return &response.Data, nil
+}
+
+func (b *Bailup) GetState() (*model.State, error) {
+	return b.Execute(&command.EmptyCommand{})
 }
