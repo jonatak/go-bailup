@@ -11,7 +11,6 @@ type Bailup struct {
 	password   string
 	regulation string
 	csrf       string
-	xsrf       string
 	client     *http.Client
 }
 
@@ -30,5 +29,19 @@ func NewBailup(email, password, regulation string) *Bailup {
 }
 
 func (b *Bailup) IsConnected() bool {
-	return b.csrf != "" && b.xsrf != ""
+	xsrf, err := b.CurrentXSRFToken()
+	if err != nil {
+		return false
+	}
+
+	return b.csrf != "" && xsrf != ""
+}
+
+func (b *Bailup) CurrentXSRFToken() (string, error) {
+	xsrf, found := findCookie(b.client.Jar.Cookies(bailupBaseURL), "XSRF-TOKEN")
+	if !found {
+		return "", NewBailupError("xsrf token not found", nil)
+	}
+
+	return xsrf, nil
 }

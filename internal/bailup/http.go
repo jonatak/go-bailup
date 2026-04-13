@@ -1,8 +1,21 @@
 package bailup
 
-import "net/http"
+import (
+	"net/http"
+	"net/url"
+)
 
 const bailupWebsite = "https://www.baillconnect.com"
+
+var bailupBaseURL = mustParseURL(bailupWebsite)
+
+func mustParseURL(rawURL string) *url.URL {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		panic(err)
+	}
+	return parsed
+}
 
 func findCookie(cookies []*http.Cookie, name string) (string, bool) {
 	for _, c := range cookies {

@@ -32,9 +32,13 @@ func (b *Bailup) Execute(cmd command.JSONCommand) (*model.State, error) {
 	for k, v := range baseHeader() {
 		req.Header.Set(k, v)
 	}
+	xsrf, err := b.CurrentXSRFToken()
+	if err != nil {
+		return nil, NewBailupError("could not read current xsrf token", err)
+	}
 
 	req.Header.Set("X-Csrf-Token", b.csrf)
-	req.Header.Set("X-Xsrf-Token", b.xsrf)
+	req.Header.Set("X-Xsrf-Token", xsrf)
 
 	resp, err := b.client.Do(req)
 	if err != nil {

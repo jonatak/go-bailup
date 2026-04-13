@@ -44,14 +44,14 @@ func (b *Bailup) Connect() error {
 	}
 
 	b.csrf = csrf
-	if err := b.setXsrfToken(token); err != nil {
+	if err := b.login(token); err != nil {
 		return NewBailupError("could not establish authenticated session", err)
 	}
 
 	return nil
 }
 
-func (b *Bailup) setXsrfToken(token string) error {
+func (b *Bailup) login(token string) error {
 	if token == "" {
 		return errors.New("login form token was empty")
 	}
@@ -83,13 +83,8 @@ func (b *Bailup) setXsrfToken(token string) error {
 		return errors.New("login failed: still on login page")
 	}
 
-	baseURL, err := url.Parse(bailupWebsite)
-	if err != nil {
-		return NewBailupError("could not parse bailup base URL", err)
-	}
-
 	var found bool
-	b.xsrf, found = findCookie(b.client.Jar.Cookies(baseURL), "XSRF-TOKEN")
+	_, found = findCookie(b.client.Jar.Cookies(bailupBaseURL), "XSRF-TOKEN")
 	if !found {
 		return errors.New("login failed: XSRF token not found")
 	}
