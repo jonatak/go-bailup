@@ -2,70 +2,69 @@ package bailup
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/jonatak/go-bailup/internal/bailup/command"
 	"github.com/jonatak/go-bailup/internal/bailup/model"
 )
 
-func NewCommand(s *model.State, room string, kind command.Kind, value string) (command.JSONCommand, error) {
-	if kind == command.Mode && strings.EqualFold(room, "general") {
-		ucMode, err := model.UCModeFromString(value)
-		if err != nil {
-			return nil, err
-		}
-
-		return command.ModeCommand{
-			IsGeneral: true,
-			Value:     int(ucMode),
-		}, nil
+func NewHVACModeCommand(mode string) (command.JSONCommand, error) {
+	ucMode, err := model.UCModeFromString(mode)
+	if err != nil {
+		return nil, err
 	}
 
-	var thermostat *model.Thermostat
-	for i := range s.Thermostats {
-		if strings.EqualFold(s.Thermostats[i].Name, room) {
-			thermostat = &s.Thermostats[i]
-			break
-		}
+	return command.ModeCommand{
+		Value: int(ucMode),
+	}, nil
+}
+
+func NewRoomPowerCommand(s *model.State, room string, on bool) (command.JSONCommand, error) {
+	thermostat, err := findThermostat(s, room)
+	if err != nil {
+		return nil, err
 	}
+
+	return command.RoomPowerCommand{
+		ThermostatID: thermostat.ID,
+		On:           on,
+	}, nil
+}
+
+func NewPresetCommand(s *model.State, room string, preset string) (command.JSONCommand, error) {
+	thermostat, err := findThermostat(s, room)
+	if err != nil {
+		return nil, err
+	}
+
+	thMode, err := model.ThModeFromString(preset)
+	if err != nil {
+		return nil, err
+	}
+
+	return command.Preset{
+		ThermostatID: thermostat.ID,
+		Value:        int(thMode),
+	}, nil
+}
+
+func NewTemperatureCommand(s *model.State, room string, value float64) (command.JSONCommand, error) {
+	thermostat, err := findThermostat(s, room)
+	if err != nil {
+		return nil, err
+	}
+
+	return command.TemperatureCommand{
+		ThermostatID: thermostat.ID,
+		UCMode:       s.UCMode,
+		ThMode:       thermostat.T1T2,
+		Value:        value,
+	}, nil
+}
+
+func findThermostat(s *model.State, room string) (*model.Thermostat, error) {
+	thermostat := s.GetThermostatByName(room)
 	if thermostat == nil {
 		return nil, fmt.Errorf("thermostat %q not found", room)
 	}
-
-	switch kind {
-	case command.PresetMode:
-		thMode, err := model.ThModeFromString(value)
-		if err != nil {
-			return nil, err
-		}
-		return command.Preset{
-			ThermostatID: thermostat.ID,
-			Value:        int(thMode),
-		}, nil
-
-	case command.Mode:
-		ucMode, err := model.UCModeFromString(value)
-		if err != nil {
-			return nil, err
-		}
-		return command.ModeCommand{
-			ThermostatID: thermostat.ID,
-			Value:        int(ucMode),
-		}, nil
-
-	case command.Temperature:
-		floatValue, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid temperature %q: %w", value, err)
-		}
-		return command.TemperatureCommand{
-			ThermostatID: thermostat.ID,
-			UCMode:       s.UCMode,
-			ThMode:       thermostat.T1T2,
-			Value:        floatValue,
-		}, nil
-	}
-
-	return nil, fmt.Errorf("unsupported command %q", kind)
+	return thermostat, nil
 }

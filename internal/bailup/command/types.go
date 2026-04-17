@@ -7,6 +7,7 @@ type Kind string
 const (
 	PresetMode  Kind = "preset_mode"
 	Mode        Kind = "mode"
+	RoomPower   Kind = "room_power"
 	Temperature Kind = "temperature"
 )
 

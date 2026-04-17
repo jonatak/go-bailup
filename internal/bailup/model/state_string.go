@@ -22,12 +22,7 @@ func (s State) String() string {
 
 	fmt.Fprintf(&b, "Thermostats (%d):\n", len(s.Thermostats))
 	for _, t := range s.Thermostats {
-		fmt.Fprintf(&b, "- #%d %s\n", t.Number, t.Name)
-		fmt.Fprintf(&b, "  id=%d key=%s zone=%d\n", t.ID, t.Key, t.Zone)
-		fmt.Fprintf(&b, "  connected=%t on=%t battery_low=%t\n", t.IsConnected, t.IsOn, t.IsBatteryLow)
-		fmt.Fprintf(&b, "  temperature=%.1f C mode=%s motor_state=%d\n", t.Temperature, t.T1T2, t.MotorState)
-		fmt.Fprintf(&b, "  hot_setpoints=%.1f / %.1f C\n", t.SetpointHotT1, t.SetpointHotT2)
-		fmt.Fprintf(&b, "  cool_setpoints=%.1f / %.1f C\n", t.SetpointCoolT1, t.SetpointCoolT2)
+		fmt.Fprintf(&b, "- %s\n", strings.ReplaceAll(t.String(), "\n", "\n  "))
 	}
 
 	return strings.TrimRight(b.String(), "\n")

@@ -13,7 +13,6 @@ const (
 	UCModeHeat
 	UCModeDry
 	UCModeFanOnly
-	UCModeAuto
 )
 
 type ThMode int
@@ -46,8 +45,6 @@ func UCModeFromString(mode string) (UCMode, error) {
 		return UCModeDry, nil
 	case "fan-only":
 		return UCModeFanOnly, nil
-	case "auto":
-		return UCModeAuto, nil
 	default:
 		return 0, fmt.Errorf("unsupported unit mode %q", mode)
 	}
@@ -65,8 +62,6 @@ func (m UCMode) String() string {
 		return "dry"
 	case UCModeFanOnly:
 		return "fan-only"
-	case UCModeAuto:
-		return "auto"
 	default:
 		return fmt.Sprintf("unknown(%d)", int(m))
 	}

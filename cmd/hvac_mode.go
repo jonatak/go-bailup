@@ -5,7 +5,6 @@ import (
 
 	"github.com/jonatak/go-bailup/internal/app"
 	"github.com/jonatak/go-bailup/internal/bailup"
-	"github.com/jonatak/go-bailup/internal/bailup/command"
 )
 
 type HvacMode struct {
@@ -13,17 +12,12 @@ type HvacMode struct {
 }
 
 func (s *HvacMode) Run(appCtx *app.AppContext) error {
-	state, err := appCtx.BailUp.GetState()
+	cmd, err := bailup.NewHVACModeCommand(s.Mode)
 	if err != nil {
 		return err
 	}
 
-	cmd, err := bailup.NewCommand(state, "general", command.Mode, s.Mode)
-	if err != nil {
-		return err
-	}
-
-	state, err = appCtx.BailUp.Execute(cmd)
+	state, err := appCtx.BailUp.Execute(cmd)
 	if err != nil {
 		return err
 	}
