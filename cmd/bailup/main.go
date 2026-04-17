@@ -6,14 +6,14 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/jonatak/go-bailup/cmd"
 	"github.com/jonatak/go-bailup/internal/app"
+	"github.com/jonatak/go-bailup/internal/cli"
 	kongcompletion "github.com/jotaen/kong-completion"
 )
 
 func main() {
 
-	cliApp := kong.Must(&cmd.CLI{})
+	cliApp := kong.Must(&cli.CLI{})
 	kongcompletion.Register(cliApp)
 
 	ctx, err := cliApp.Parse(os.Args[1:])

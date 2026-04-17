@@ -1,12 +1,15 @@
 BINARY ?= bailup
 
-.PHONY: all build test fmt vet clean
+.PHONY: all build test fmt vet clean install
 
 all: build
 
+install:
+	go install ./cmd/$(BINARY)
+
 build:
 	mkdir -p bin
-	go build -o bin/$(BINARY) main.go
+	go build -o bin/$(BINARY) ./cmd/$(BINARY)
 
 test:
 	go test ./...

@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import kongcompletion "github.com/jotaen/kong-completion"
 

@@ -32,6 +32,12 @@ The binary is expected at:
 ./bin/bailup
 ```
 
+Install into your Go binary directory:
+
+```sh
+make install
+```
+
 ## Configuration
 
 The CLI reads credentials and regulation id from environment variables:
@@ -118,7 +124,8 @@ Use the generated output according to your shell setup.
 
 The project is split into a few focused packages:
 
-- `cmd`: Kong-based CLI commands.
+- `cmd/bailup`: installable CLI entrypoint.
+- `internal/cli`: Kong-based CLI commands.
 - `internal/app`: application initialization and environment loading.
 - `internal/bailup`: authenticated Baillconnect client, login flow, request execution, and command builders.
 - `internal/bailup/command`: JSON payload types sent to Baillconnect.
