@@ -50,13 +50,30 @@ func (s *HVACSystem) SetMode(mode HVACSystemMode) error {
 	return nil
 }
 
-func (s *HVACSystem) FindThermostat(room string) (*Thermostat, error) {
-	for i := range s.thermostats {
-		if strings.EqualFold(s.thermostats[i].room, room) {
-			return &s.thermostats[i], nil
-		}
+func (s *HVACSystem) SetRoomPreset(room string, preset ThermostatPreset) error {
+	th, err := s.findThermostat(room)
+	if err != nil {
+		return err
 	}
-	return nil, ErrThermostatNotFound
+	return th.setPreset(preset)
+}
+
+func (s *HVACSystem) TurnRoomOn(room string) error {
+	th, err := s.findThermostat(room)
+	if err != nil {
+		return err
+	}
+	th.turnOn()
+	return nil
+}
+
+func (s *HVACSystem) TurnRoomOff(room string) error {
+	th, err := s.findThermostat(room)
+	if err != nil {
+		return err
+	}
+	th.turnOff()
+	return nil
 }
 
 func (m HVACSystemMode) SupportsSetpoint() bool {
@@ -73,7 +90,7 @@ func (s *HVACSystem) CurrentSetpoint(room string) (float64, error) {
 		return 0, err
 	}
 
-	th, err := s.FindThermostat(room)
+	th, err := s.findThermostat(room)
 
 	if err != nil {
 		return 0, err
@@ -87,7 +104,7 @@ func (s *HVACSystem) CurrentSetpoint(room string) (float64, error) {
 }
 
 func (s *HVACSystem) SetTemperature(room string, mode HVACSystemMode, preset ThermostatPreset, temp float64) error {
-	th, err := s.FindThermostat(room)
+	th, err := s.findThermostat(room)
 	if err != nil {
 		return err
 	}
@@ -96,7 +113,7 @@ func (s *HVACSystem) SetTemperature(room string, mode HVACSystemMode, preset The
 }
 
 func (s *HVACSystem) SetCurrentSetPoint(room string, temp float64) error {
-	th, err := s.FindThermostat(room)
+	th, err := s.findThermostat(room)
 
 	if err != nil {
 		return err
@@ -105,18 +122,27 @@ func (s *HVACSystem) SetCurrentSetPoint(room string, temp float64) error {
 	return th.setTemperature(s.mode, th.preset, temp)
 }
 
-func (s *HVACSystem) SetHeatComfortTemp(room string, temp float64) error {
+func (s *HVACSystem) SetHeatComfortTemperature(room string, temp float64) error {
 	return s.SetTemperature(room, HVACSystemModeHeat, PresetComfort, temp)
 }
 
-func (s *HVACSystem) SetHeatEcoTemp(room string, temp float64) error {
+func (s *HVACSystem) SetHeatEcoTemperature(room string, temp float64) error {
 	return s.SetTemperature(room, HVACSystemModeHeat, PresetEco, temp)
 }
 
-func (s *HVACSystem) SetCoolComfortTemp(room string, temp float64) error {
+func (s *HVACSystem) SetCoolComfortTemperature(room string, temp float64) error {
 	return s.SetTemperature(room, HVACSystemModeCool, PresetComfort, temp)
 }
 
-func (s *HVACSystem) SetCoolEcoTemp(room string, temp float64) error {
+func (s *HVACSystem) SetCoolEcoTemperature(room string, temp float64) error {
 	return s.SetTemperature(room, HVACSystemModeCool, PresetEco, temp)
+}
+
+func (s *HVACSystem) findThermostat(room string) (*Thermostat, error) {
+	for i := range s.thermostats {
+		if strings.EqualFold(s.thermostats[i].room, room) {
+			return &s.thermostats[i], nil
+		}
+	}
+	return nil, ErrThermostatNotFound
 }

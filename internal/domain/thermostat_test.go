@@ -33,24 +33,6 @@ func TestThermostatValidateRejectsInvalidZeroValueThermostat(t *testing.T) {
 	require.ErrorIs(t, thermostat.Validate(), domain.ErrInvalidPresetMode)
 }
 
-func TestThermostatSetPresetValidatesPreset(t *testing.T) {
-	thermostat := mustThermostat(t, "Living Room", domain.PresetComfort)
-
-	err := thermostat.SetPreset(domain.PresetEco)
-
-	require.NoError(t, err)
-	assert.Equal(t, domain.PresetEco, thermostat.Preset())
-}
-
-func TestThermostatSetPresetDoesNotChangeStateForInvalidPreset(t *testing.T) {
-	thermostat := mustThermostat(t, "Living Room", domain.PresetComfort)
-
-	err := thermostat.SetPreset(domain.ThermostatPreset("away"))
-
-	require.ErrorIs(t, err, domain.ErrInvalidPresetMode)
-	assert.Equal(t, domain.PresetComfort, thermostat.Preset())
-}
-
 func mustTemperatureSettings(
 	t *testing.T,
 	mode domain.HVACSystemMode,

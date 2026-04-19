@@ -55,9 +55,9 @@ func TestNewHVACSystemCopiesThermostatSlice(t *testing.T) {
 
 	thermostats[0] = bedroom
 
-	found, err := system.FindThermostat("Living Room")
+	current, err := system.CurrentSetpoint("Living Room")
 	require.NoError(t, err)
-	assert.Equal(t, "Living Room", found.Room())
+	assert.Equal(t, 20.0, current)
 }
 
 func TestHVACSystemThermostatsReturnsCopy(t *testing.T) {
@@ -65,29 +65,29 @@ func TestHVACSystemThermostatsReturnsCopy(t *testing.T) {
 	thermostats := system.Thermostats()
 	require.Len(t, thermostats, 1)
 
-	require.NoError(t, thermostats[0].SetPreset(domain.PresetEco))
+	thermostats[0] = mustThermostat(t, "Bedroom", domain.PresetEco)
 
 	current, err := system.CurrentSetpoint("living room")
 	require.NoError(t, err)
 	assert.Equal(t, 20.0, current)
 }
 
-func TestHVACSystemFindThermostatIsCaseInsensitive(t *testing.T) {
+func TestHVACSystemRoomLookupIsCaseInsensitive(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	thermostat, err := system.FindThermostat("living room")
+	current, err := system.CurrentSetpoint("living room")
 
 	require.NoError(t, err)
-	assert.Equal(t, "Living Room", thermostat.Room())
+	assert.Equal(t, 20.0, current)
 }
 
-func TestHVACSystemFindThermostatReturnsErrorWhenRoomDoesNotExist(t *testing.T) {
+func TestHVACSystemRoomLookupReturnsErrorWhenRoomDoesNotExist(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	thermostat, err := system.FindThermostat("Kitchen")
+	current, err := system.CurrentSetpoint("Kitchen")
 
 	require.ErrorIs(t, err, domain.ErrThermostatNotFound)
-	assert.Nil(t, thermostat)
+	assert.Equal(t, 0.0, current)
 }
 
 func TestHVACSystemCurrentSetpointUsesCurrentModeAndPreset(t *testing.T) {
@@ -97,9 +97,7 @@ func TestHVACSystemCurrentSetpointUsesCurrentModeAndPreset(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 20.0, current)
 
-	thermostat, err := system.FindThermostat("Living Room")
-	require.NoError(t, err)
-	require.NoError(t, thermostat.SetPreset(domain.PresetEco))
+	require.NoError(t, system.SetRoomPreset("Living Room", domain.PresetEco))
 
 	current, err = system.CurrentSetpoint("Living Room")
 	require.NoError(t, err)
@@ -143,7 +141,7 @@ func TestHVACSystemSetCurrentSetPointUpdatesActivePreset(t *testing.T) {
 func TestHVACSystemSetTemperatureRejectsInvalidComfortEcoRange(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	err := system.SetHeatEcoTemp("Living Room", 19)
+	err := system.SetHeatEcoTemperature("Living Room", 19)
 
 	require.ErrorIs(t, err, domain.ErrInvalidTemperatureRange)
 
@@ -155,15 +153,38 @@ func TestHVACSystemSetTemperatureRejectsInvalidComfortEcoRange(t *testing.T) {
 func TestHVACSystemSetTemperatureUpdatesTargetModeAndPreset(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	require.NoError(t, system.SetCoolEcoTemp("Living Room", 27))
+	require.NoError(t, system.SetCoolEcoTemperature("Living Room", 27))
 	require.NoError(t, system.SetMode(domain.HVACSystemModeCool))
-	thermostat, err := system.FindThermostat("Living Room")
-	require.NoError(t, err)
-	require.NoError(t, thermostat.SetPreset(domain.PresetEco))
+	require.NoError(t, system.SetRoomPreset("Living Room", domain.PresetEco))
 
 	current, err := system.CurrentSetpoint("Living Room")
 	require.NoError(t, err)
 	assert.Equal(t, 27.0, current)
+}
+
+func TestHVACSystemSetRoomPresetValidatesPreset(t *testing.T) {
+	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
+
+	err := system.SetRoomPreset("Living Room", domain.ThermostatPreset("away"))
+
+	require.ErrorIs(t, err, domain.ErrInvalidPresetMode)
+	current, currentErr := system.CurrentSetpoint("Living Room")
+	require.NoError(t, currentErr)
+	assert.Equal(t, 20.0, current)
+}
+
+func TestHVACSystemTurnRoomOnAndOff(t *testing.T) {
+	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
+
+	require.NoError(t, system.TurnRoomOff("Living Room"))
+	thermostats := system.Thermostats()
+	require.Len(t, thermostats, 1)
+	assert.False(t, thermostats[0].IsOn())
+
+	require.NoError(t, system.TurnRoomOn("Living Room"))
+	thermostats = system.Thermostats()
+	require.Len(t, thermostats, 1)
+	assert.True(t, thermostats[0].IsOn())
 }
 
 func mustHVACSystem(t *testing.T, mode domain.HVACSystemMode) *domain.HVACSystem {
