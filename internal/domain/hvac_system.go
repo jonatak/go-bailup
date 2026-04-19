@@ -154,7 +154,7 @@ func (s *HVACSystem) SetTemperature(room string, mode HVACSystemMode, preset The
 	}, nil
 }
 
-func (s *HVACSystem) SetCurrentSetPoint(room string, temp float64) (Change, error) {
+func (s *HVACSystem) SetCurrentSetpoint(room string, temp float64) (Change, error) {
 	th, err := s.findThermostat(room)
 
 	if err != nil {

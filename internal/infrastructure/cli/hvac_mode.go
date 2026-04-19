@@ -7,11 +7,11 @@ import (
 	"github.com/jonatak/go-bailup/internal/domain"
 )
 
-type HvacMode struct {
+type HVACMode struct {
 	Mode domain.HVACSystemMode `arg:"" enum:"off,cool,heat,dry,fan-only"`
 }
 
-func (s *HvacMode) Run(appCtx *app.AppContext) error {
+func (s *HVACMode) Run(appCtx *app.AppContext) error {
 
 	state, err := appCtx.HVACService.SetMode(s.Mode)
 	if err != nil {

@@ -84,7 +84,7 @@ func (s *HVACService) SetCurrentSetpoint(
 		return nil, err
 	}
 
-	change, err := system.SetCurrentSetPoint(room, temp)
+	change, err := system.SetCurrentSetpoint(room, temp)
 	if err != nil {
 		return nil, err
 	}
