@@ -73,7 +73,7 @@ func (t *Thermostat) HeatSetting() TemperatureSettings {
 	return t.heatSetting
 }
 
-func (t *Thermostat) SetPreset(preset ThermostatPreset) error {
+func (t *Thermostat) setPreset(preset ThermostatPreset) error {
 	if err := preset.Validate(); err != nil {
 		return err
 	}
@@ -81,11 +81,11 @@ func (t *Thermostat) SetPreset(preset ThermostatPreset) error {
 	return nil
 }
 
-func (t *Thermostat) TurnOn() {
+func (t *Thermostat) turnOn() {
 	t.isOn = true
 }
 
-func (t *Thermostat) TurnOff() {
+func (t *Thermostat) turnOff() {
 	t.isOn = false
 }
 
