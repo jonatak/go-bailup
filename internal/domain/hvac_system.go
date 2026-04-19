@@ -8,14 +8,30 @@ type HVACSystem struct {
 }
 
 func NewHVACSystem(mode HVACSystemMode, thermostats []Thermostat) (*HVACSystem, error) {
-	if err := mode.Validate(); err != nil {
+	system := &HVACSystem{
+		mode:        mode,
+		thermostats: append([]Thermostat(nil), thermostats...),
+	}
+
+	if err := system.Validate(); err != nil {
 		return nil, err
 	}
 
-	return &HVACSystem{
-		mode:        mode,
-		thermostats: append([]Thermostat(nil), thermostats...),
-	}, nil
+	return system, nil
+}
+
+func (s *HVACSystem) Validate() error {
+	if err := s.mode.Validate(); err != nil {
+		return err
+	}
+
+	for i := range s.thermostats {
+		if err := s.thermostats[i].Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *HVACSystem) Mode() HVACSystemMode {

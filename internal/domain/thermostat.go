@@ -17,26 +17,36 @@ func NewThermostat(
 	heatSetting TemperatureSettings,
 	coolSetting TemperatureSettings,
 ) (Thermostat, error) {
-	if err := preset.Validate(); err != nil {
-		return Thermostat{}, err
-	}
-
-	if err := heatSetting.validateForMode(HVACSystemModeHeat); err != nil {
-		return Thermostat{}, err
-	}
-
-	if err := coolSetting.validateForMode(HVACSystemModeCool); err != nil {
-		return Thermostat{}, err
-	}
-
-	return Thermostat{
+	thermostat := Thermostat{
 		room:        room,
 		preset:      preset,
 		isOn:        isOn,
 		isRunning:   isRunning,
 		heatSetting: heatSetting,
 		coolSetting: coolSetting,
-	}, nil
+	}
+
+	if err := thermostat.Validate(); err != nil {
+		return Thermostat{}, err
+	}
+
+	return thermostat, nil
+}
+
+func (t Thermostat) Validate() error {
+	if err := t.preset.Validate(); err != nil {
+		return err
+	}
+
+	if err := t.heatSetting.validateForMode(HVACSystemModeHeat); err != nil {
+		return err
+	}
+
+	if err := t.coolSetting.validateForMode(HVACSystemModeCool); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (t *Thermostat) Room() string {
