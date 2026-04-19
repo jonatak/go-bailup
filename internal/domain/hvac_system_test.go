@@ -194,10 +194,10 @@ func TestHVACSystemSetModeDoesNotChangeStateForInvalidMode(t *testing.T) {
 	assert.Equal(t, domain.HVACSystemModeHeat, system.Mode())
 }
 
-func TestHVACSystemSetCurrentSetPointUpdatesActivePreset(t *testing.T) {
+func TestHVACSystemSetCurrentSetpointUpdatesActivePreset(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	change, err := system.SetCurrentSetPoint("Living Room", 21)
+	change, err := system.SetCurrentSetpoint("Living Room", 21)
 	require.NoError(t, err)
 	assert.Equal(t, domain.TemperatureChanged{
 		Room:   "Living Room",

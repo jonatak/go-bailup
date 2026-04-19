@@ -125,11 +125,13 @@ Use the generated output according to your shell setup.
 The project is split into a few focused packages:
 
 - `cmd/bailup`: installable CLI entrypoint.
-- `internal/cli`: Kong-based CLI commands.
 - `internal/app`: application initialization and environment loading.
-- `internal/bailup`: authenticated Baillconnect client, login flow, request execution, and command builders.
-- `internal/bailup/command`: JSON payload types sent to Baillconnect.
-- `internal/bailup/model`: API models, modes, and human-readable formatting.
+- `internal/domain`: HVAC aggregate, thermostat behavior, setpoint rules, and domain change objects.
+- `internal/application`: use-case orchestration and outbound gateway port.
+- `internal/infrastructure/cli`: Kong-based CLI commands and terminal formatting.
+- `internal/infrastructure/bailup`: authenticated Baillconnect gateway, login flow, state mapping, and command mapping.
+- `internal/infrastructure/bailup/command`: JSON payload types sent to Baillconnect.
+- `internal/infrastructure/bailup/model`: Baillconnect API DTOs and mode conversions.
 
 ## Development
 
@@ -148,8 +150,7 @@ make build
 
 ## Roadmap
 
-- [ ] Add unit tests for command payload generation.
-- [ ] Add tests for mode parsing and temperature targeting.
+- [ ] Add tests around CLI command execution where useful.
 - [ ] Add MQTT / Home Assistant integration.
 - [ ] Reduce HTTP headers to the minimum required by Baillconnect.
 - [ ] Add a real server-side session check if needed.
