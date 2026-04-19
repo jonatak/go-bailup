@@ -94,15 +94,23 @@ func (t *Thermostat) currentSetpointForMode(mode HVACSystemMode) (float64, error
 		return 0, err
 	}
 
+	return t.setpointFor(mode, t.preset)
+}
+
+func (t *Thermostat) setpointFor(mode HVACSystemMode, preset ThermostatPreset) (float64, error) {
+	if err := preset.Validate(); err != nil {
+		return 0, err
+	}
+
 	switch mode {
 	case HVACSystemModeHeat:
-		if t.preset == PresetEco {
+		if preset == PresetEco {
 			return t.heatSetting.eco, nil
 		}
 		return t.heatSetting.comfort, nil
 
 	case HVACSystemModeCool:
-		if t.preset == PresetEco {
+		if preset == PresetEco {
 			return t.coolSetting.eco, nil
 		}
 		return t.coolSetting.comfort, nil

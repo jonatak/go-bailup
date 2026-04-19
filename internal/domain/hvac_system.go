@@ -112,6 +112,31 @@ func (s *HVACSystem) CurrentSetpoint(room string) (float64, error) {
 	return th.currentSetpointForMode(s.mode)
 }
 
+func (s *HVACSystem) Setpoint(
+	room string,
+	mode HVACSystemMode,
+	preset ThermostatPreset,
+) (float64, error) {
+	if err := mode.Validate(); err != nil {
+		return 0, err
+	}
+
+	if err := preset.Validate(); err != nil {
+		return 0, err
+	}
+
+	if !mode.SupportsSetpoint() {
+		return 0, ErrInvalidTemperatureSettingForMode
+	}
+
+	th, err := s.findThermostat(room)
+	if err != nil {
+		return 0, err
+	}
+
+	return th.setpointFor(mode, preset)
+}
+
 func (s *HVACSystem) SetTemperature(room string, mode HVACSystemMode, preset ThermostatPreset, temp float64) (Change, error) {
 	th, err := s.findThermostat(room)
 	if err != nil {
@@ -145,22 +170,6 @@ func (s *HVACSystem) SetCurrentSetPoint(room string, temp float64) (Change, erro
 		Preset: th.preset,
 		Value:  temp,
 	}, nil
-}
-
-func (s *HVACSystem) SetHeatComfortTemperature(room string, temp float64) (Change, error) {
-	return s.SetTemperature(room, HVACSystemModeHeat, PresetComfort, temp)
-}
-
-func (s *HVACSystem) SetHeatEcoTemperature(room string, temp float64) (Change, error) {
-	return s.SetTemperature(room, HVACSystemModeHeat, PresetEco, temp)
-}
-
-func (s *HVACSystem) SetCoolComfortTemperature(room string, temp float64) (Change, error) {
-	return s.SetTemperature(room, HVACSystemModeCool, PresetComfort, temp)
-}
-
-func (s *HVACSystem) SetCoolEcoTemperature(room string, temp float64) (Change, error) {
-	return s.SetTemperature(room, HVACSystemModeCool, PresetEco, temp)
 }
 
 func (s *HVACSystem) findThermostat(room string) (*Thermostat, error) {

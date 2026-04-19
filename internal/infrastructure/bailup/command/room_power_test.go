@@ -1,10 +1,9 @@
-package bailup_test
+package command_test
 
 import (
 	"testing"
 
-	"github.com/jonatak/go-bailup/internal/bailup"
-	"github.com/jonatak/go-bailup/internal/bailup/command"
+	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/command"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +11,7 @@ import (
 func TestNewRoomPowerCommandOn(t *testing.T) {
 	state := testState()
 
-	cmd, err := bailup.NewRoomPowerCommand(state, "living room", true)
+	cmd, err := command.NewRoomPowerCommand(state, "living room", true)
 	require.NoError(t, err)
 
 	assert.Equal(t, command.RoomPowerCommand{
@@ -24,7 +23,7 @@ func TestNewRoomPowerCommandOn(t *testing.T) {
 func TestNewRoomPowerCommandOff(t *testing.T) {
 	state := testState()
 
-	cmd, err := bailup.NewRoomPowerCommand(state, "living room", false)
+	cmd, err := command.NewRoomPowerCommand(state, "living room", false)
 	require.NoError(t, err)
 
 	assert.Equal(t, command.RoomPowerCommand{
@@ -36,7 +35,7 @@ func TestNewRoomPowerCommandOff(t *testing.T) {
 func TestNewRoomPowerCommandInvalidRoom(t *testing.T) {
 	state := testState()
 
-	cmd, err := bailup.NewRoomPowerCommand(state, "living room2", false)
+	cmd, err := command.NewRoomPowerCommand(state, "living room2", false)
 	require.Error(t, err)
 	require.Nil(t, cmd)
 

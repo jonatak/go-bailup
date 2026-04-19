@@ -130,6 +130,60 @@ func TestHVACSystemCurrentSetpointRejectsModeWithoutSetpoints(t *testing.T) {
 	assert.Equal(t, 0.0, current)
 }
 
+func TestHVACSystemSetpointUsesTargetModeAndPreset(t *testing.T) {
+	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
+
+	testCases := []struct {
+		name   string
+		mode   domain.HVACSystemMode
+		preset domain.ThermostatPreset
+		want   float64
+	}{
+		{
+			name:   "heat comfort",
+			mode:   domain.HVACSystemModeHeat,
+			preset: domain.PresetComfort,
+			want:   20,
+		},
+		{
+			name:   "heat eco",
+			mode:   domain.HVACSystemModeHeat,
+			preset: domain.PresetEco,
+			want:   18,
+		},
+		{
+			name:   "cool comfort",
+			mode:   domain.HVACSystemModeCool,
+			preset: domain.PresetComfort,
+			want:   24,
+		},
+		{
+			name:   "cool eco",
+			mode:   domain.HVACSystemModeCool,
+			preset: domain.PresetEco,
+			want:   26,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := system.Setpoint("Living Room", tc.mode, tc.preset)
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestHVACSystemSetpointRejectsModeWithoutSetpoints(t *testing.T) {
+	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
+
+	current, err := system.Setpoint("Living Room", domain.HVACSystemModeOff, domain.PresetComfort)
+
+	require.ErrorIs(t, err, domain.ErrInvalidTemperatureSettingForMode)
+	assert.Equal(t, 0.0, current)
+}
+
 func TestHVACSystemSetModeDoesNotChangeStateForInvalidMode(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
@@ -161,7 +215,7 @@ func TestHVACSystemSetCurrentSetPointUpdatesActivePreset(t *testing.T) {
 func TestHVACSystemSetTemperatureRejectsInvalidComfortEcoRange(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	change, err := system.SetHeatEcoTemperature("Living Room", 19)
+	change, err := system.SetTemperature("Living Room", domain.HVACSystemModeHeat, domain.PresetEco, 19)
 
 	require.ErrorIs(t, err, domain.ErrInvalidTemperatureRange)
 	assert.Nil(t, change)
@@ -174,7 +228,7 @@ func TestHVACSystemSetTemperatureRejectsInvalidComfortEcoRange(t *testing.T) {
 func TestHVACSystemSetTemperatureUpdatesTargetModeAndPreset(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	change, err := system.SetCoolEcoTemperature("Living Room", 27)
+	change, err := system.SetTemperature("Living Room", domain.HVACSystemModeCool, domain.PresetEco, 27)
 	require.NoError(t, err)
 	assert.Equal(t, domain.TemperatureChanged{
 		Room:   "Living Room",

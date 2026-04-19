@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jonatak/go-bailup/internal/bailup"
+	"github.com/jonatak/go-bailup/internal/application"
+	"github.com/jonatak/go-bailup/internal/infrastructure/bailup"
 )
 
 type AppContext struct {
-	BailUp *bailup.Bailup
+	HVACService *application.HVACService
 }
 
 func NewApp() (*AppContext, error) {
@@ -20,12 +21,12 @@ func NewApp() (*AppContext, error) {
 		return nil, InitError
 	}
 
-	bailup := bailup.NewBailup(bailupEmail, bailupPassword, bailupRegulation)
-	err := bailup.Connect()
+	gateway := bailup.NewGateway(bailupEmail, bailupPassword, bailupRegulation)
+	err := gateway.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("an error occured: %v\n", err)
 	}
 	return &AppContext{
-		BailUp: bailup,
+		HVACService: application.NewHVACService(gateway),
 	}, nil
 }

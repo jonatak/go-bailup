@@ -7,7 +7,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/jonatak/go-bailup/internal/app"
-	"github.com/jonatak/go-bailup/internal/cli"
+	"github.com/jonatak/go-bailup/internal/infrastructure/cli"
 	kongcompletion "github.com/jotaen/kong-completion"
 )
 
@@ -37,10 +37,6 @@ func main() {
 			fmt.Fprintln(os.Stderr, app.InitError)
 		}
 		return
-	}
-
-	if !appCtx.BailUp.IsConnected() {
-		fmt.Println("Disconnected")
 	}
 
 	ctx.Bind(appCtx)
