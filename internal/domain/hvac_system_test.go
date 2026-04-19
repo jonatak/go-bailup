@@ -97,13 +97,24 @@ func TestHVACSystemCurrentSetpointUsesCurrentModeAndPreset(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 20.0, current)
 
-	require.NoError(t, system.SetRoomPreset("Living Room", domain.PresetEco))
+	change, err := system.SetRoomPreset("Living Room", domain.PresetEco)
+	require.NoError(t, err)
+	assert.Equal(t, domain.RoomPresetChanged{
+		Room:   "Living Room",
+		Preset: domain.PresetEco,
+	}, change)
+	assert.Equal(t, domain.ChangeRoomPreset, change.Kind())
 
 	current, err = system.CurrentSetpoint("Living Room")
 	require.NoError(t, err)
 	assert.Equal(t, 18.0, current)
 
-	require.NoError(t, system.SetMode(domain.HVACSystemModeCool))
+	change, err = system.SetMode(domain.HVACSystemModeCool)
+	require.NoError(t, err)
+	assert.Equal(t, domain.HVACModeChanged{
+		Mode: domain.HVACSystemModeCool,
+	}, change)
+	assert.Equal(t, domain.ChangeHVACMode, change.Kind())
 
 	current, err = system.CurrentSetpoint("Living Room")
 	require.NoError(t, err)
@@ -122,16 +133,25 @@ func TestHVACSystemCurrentSetpointRejectsModeWithoutSetpoints(t *testing.T) {
 func TestHVACSystemSetModeDoesNotChangeStateForInvalidMode(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	err := system.SetMode(domain.HVACSystemMode("invalid"))
+	change, err := system.SetMode(domain.HVACSystemMode("invalid"))
 
 	require.ErrorIs(t, err, domain.ErrInvalidHVACMode)
+	assert.Nil(t, change)
 	assert.Equal(t, domain.HVACSystemModeHeat, system.Mode())
 }
 
 func TestHVACSystemSetCurrentSetPointUpdatesActivePreset(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	require.NoError(t, system.SetCurrentSetPoint("Living Room", 21))
+	change, err := system.SetCurrentSetPoint("Living Room", 21)
+	require.NoError(t, err)
+	assert.Equal(t, domain.TemperatureChanged{
+		Room:   "Living Room",
+		Mode:   domain.HVACSystemModeHeat,
+		Preset: domain.PresetComfort,
+		Value:  21,
+	}, change)
+	assert.Equal(t, domain.ChangeTemperature, change.Kind())
 
 	current, err := system.CurrentSetpoint("Living Room")
 	require.NoError(t, err)
@@ -141,9 +161,10 @@ func TestHVACSystemSetCurrentSetPointUpdatesActivePreset(t *testing.T) {
 func TestHVACSystemSetTemperatureRejectsInvalidComfortEcoRange(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	err := system.SetHeatEcoTemperature("Living Room", 19)
+	change, err := system.SetHeatEcoTemperature("Living Room", 19)
 
 	require.ErrorIs(t, err, domain.ErrInvalidTemperatureRange)
+	assert.Nil(t, change)
 
 	current, currentErr := system.CurrentSetpoint("Living Room")
 	require.NoError(t, currentErr)
@@ -153,9 +174,20 @@ func TestHVACSystemSetTemperatureRejectsInvalidComfortEcoRange(t *testing.T) {
 func TestHVACSystemSetTemperatureUpdatesTargetModeAndPreset(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	require.NoError(t, system.SetCoolEcoTemperature("Living Room", 27))
-	require.NoError(t, system.SetMode(domain.HVACSystemModeCool))
-	require.NoError(t, system.SetRoomPreset("Living Room", domain.PresetEco))
+	change, err := system.SetCoolEcoTemperature("Living Room", 27)
+	require.NoError(t, err)
+	assert.Equal(t, domain.TemperatureChanged{
+		Room:   "Living Room",
+		Mode:   domain.HVACSystemModeCool,
+		Preset: domain.PresetEco,
+		Value:  27,
+	}, change)
+	assert.Equal(t, domain.ChangeTemperature, change.Kind())
+
+	_, err = system.SetMode(domain.HVACSystemModeCool)
+	require.NoError(t, err)
+	_, err = system.SetRoomPreset("Living Room", domain.PresetEco)
+	require.NoError(t, err)
 
 	current, err := system.CurrentSetpoint("Living Room")
 	require.NoError(t, err)
@@ -165,9 +197,10 @@ func TestHVACSystemSetTemperatureUpdatesTargetModeAndPreset(t *testing.T) {
 func TestHVACSystemSetRoomPresetValidatesPreset(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	err := system.SetRoomPreset("Living Room", domain.ThermostatPreset("away"))
+	change, err := system.SetRoomPreset("Living Room", domain.ThermostatPreset("away"))
 
 	require.ErrorIs(t, err, domain.ErrInvalidPresetMode)
+	assert.Nil(t, change)
 	current, currentErr := system.CurrentSetpoint("Living Room")
 	require.NoError(t, currentErr)
 	assert.Equal(t, 20.0, current)
@@ -176,12 +209,24 @@ func TestHVACSystemSetRoomPresetValidatesPreset(t *testing.T) {
 func TestHVACSystemTurnRoomOnAndOff(t *testing.T) {
 	system := mustHVACSystem(t, domain.HVACSystemModeHeat)
 
-	require.NoError(t, system.TurnRoomOff("Living Room"))
+	change, err := system.TurnRoomOff("Living Room")
+	require.NoError(t, err)
+	assert.Equal(t, domain.RoomPowerChanged{
+		Room: "Living Room",
+		On:   false,
+	}, change)
+	assert.Equal(t, domain.ChangeRoomPower, change.Kind())
 	thermostats := system.Thermostats()
 	require.Len(t, thermostats, 1)
 	assert.False(t, thermostats[0].IsOn())
 
-	require.NoError(t, system.TurnRoomOn("Living Room"))
+	change, err = system.TurnRoomOn("Living Room")
+	require.NoError(t, err)
+	assert.Equal(t, domain.RoomPowerChanged{
+		Room: "Living Room",
+		On:   true,
+	}, change)
+	assert.Equal(t, domain.ChangeRoomPower, change.Kind())
 	thermostats = system.Thermostats()
 	require.Len(t, thermostats, 1)
 	assert.True(t, thermostats[0].IsOn())
