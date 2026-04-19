@@ -9,12 +9,12 @@ import (
 type Status struct{}
 
 func (s *Status) Run(appCtx *app.AppContext) error {
-	state, err := appCtx.BailUp.GetState()
+	state, err := appCtx.HVACService.CurrentState()
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(state)
+	fmt.Println(formatHVACSystem(state))
 	return nil
 }

@@ -1,11 +1,10 @@
-package bailup_test
+package command_test
 
 import (
 	"testing"
 
-	"github.com/jonatak/go-bailup/internal/bailup"
-	"github.com/jonatak/go-bailup/internal/bailup/command"
-	"github.com/jonatak/go-bailup/internal/bailup/model"
+	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/command"
+	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,7 +44,7 @@ func TestHVACCommandFactoryValidCommands(t *testing.T) {
 
 	for _, c := range testCase {
 		t.Run(c.name, func(t *testing.T) {
-			cmd, err := bailup.NewHVACModeCommand(c.mode)
+			cmd, err := command.NewHVACModeCommand(c.mode)
 
 			require.NoError(t, err)
 
@@ -57,7 +56,7 @@ func TestHVACCommandFactoryValidCommands(t *testing.T) {
 }
 
 func TestHVACCommandFactoryInvalidCommand(t *testing.T) {
-	cmd, err := bailup.NewHVACModeCommand("invalid")
+	cmd, err := command.NewHVACModeCommand("invalid")
 
 	require.Error(t, err)
 	assert.Nil(t, cmd)

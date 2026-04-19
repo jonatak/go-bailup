@@ -1,6 +1,6 @@
-package bailup_test
+package command_test
 
-import "github.com/jonatak/go-bailup/internal/bailup/model"
+import "github.com/jonatak/go-bailup/internal/infrastructure/bailup/model"
 
 func testState() *model.State {
 	return &model.State{

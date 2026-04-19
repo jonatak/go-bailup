@@ -21,13 +21,13 @@ type Room struct {
 type RoomList struct{}
 
 func (r *RoomList) Run(ctx *app.AppContext) error {
-	state, err := ctx.BailUp.GetState()
+	state, err := ctx.HVACService.CurrentState()
 	if err != nil {
 		return err
 	}
 
-	for _, t := range state.Thermostats {
-		fmt.Println(t.Name)
+	for _, t := range state.Thermostats() {
+		fmt.Println(t.Room())
 	}
 	return nil
 }

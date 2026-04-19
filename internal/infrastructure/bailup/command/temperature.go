@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/jonatak/go-bailup/internal/bailup/model"
+	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/model"
 )
 
 type TemperatureCommand struct {

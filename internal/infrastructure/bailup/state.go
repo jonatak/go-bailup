@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jonatak/go-bailup/internal/bailup/command"
-	"github.com/jonatak/go-bailup/internal/bailup/model"
+	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/command"
+	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/model"
 )
 
 func (b *Bailup) Execute(cmd command.JSONCommand) (*model.State, error) {
