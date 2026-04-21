@@ -133,12 +133,31 @@ The project is split into a few focused packages:
 - `internal/infrastructure/bailup/command`: JSON payload types sent to Baillconnect.
 - `internal/infrastructure/bailup/model`: Baillconnect API DTOs and mode conversions.
 
+The main flow is:
+
+```text
+CLI command
+  -> application.HVACService
+  -> domain.HVACSystem
+  -> domain.Change
+  -> application.HVACSystemGateway
+  -> infrastructure/bailup.Gateway
+  -> Baillconnect HTTP API
+```
+
 ## Development
 
 Build everything:
 
 ```sh
 go build ./...
+```
+
+Run tests and static checks:
+
+```sh
+go test ./...
+go vet ./...
 ```
 
 Run the CLI locally:
@@ -150,7 +169,6 @@ make build
 
 ## Roadmap
 
-- [ ] Add tests around CLI command execution where useful.
 - [ ] Add MQTT / Home Assistant integration.
 - [ ] Reduce HTTP headers to the minimum required by Baillconnect.
 - [ ] Add a real server-side session check if needed.
