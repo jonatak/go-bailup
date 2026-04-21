@@ -57,7 +57,13 @@ func thermostatFromModel(thermostat model.Thermostat) (domain.Thermostat, error)
 		thermostat.SetpointHotT2,
 	)
 	if err != nil {
-		return domain.Thermostat{}, err
+		return domain.Thermostat{}, fmt.Errorf(
+			"map thermostat %q heat settings: comfort=%.1f eco=%.1f: %w",
+			thermostat.Name,
+			thermostat.SetpointHotT1,
+			thermostat.SetpointHotT2,
+			err,
+		)
 	}
 
 	coolSetting, err := domain.NewTemperatureSettings(
@@ -66,7 +72,13 @@ func thermostatFromModel(thermostat model.Thermostat) (domain.Thermostat, error)
 		thermostat.SetpointCoolT2,
 	)
 	if err != nil {
-		return domain.Thermostat{}, err
+		return domain.Thermostat{}, fmt.Errorf(
+			"map thermostat %q cool settings: comfort=%.1f eco=%.1f: %w",
+			thermostat.Name,
+			thermostat.SetpointCoolT1,
+			thermostat.SetpointCoolT2,
+			err,
+		)
 	}
 
 	return domain.NewThermostat(
@@ -85,17 +97,25 @@ func temperatureCommandFromChange(
 ) (command.JSONCommand, error) {
 	thermostat := state.GetThermostatByName(change.Room)
 	if thermostat == nil {
-		return nil, fmt.Errorf("thermostat %q not found", change.Room)
+		return nil, fmt.Errorf("map temperature change for room %q: thermostat not found", change.Room)
 	}
 
 	ucMode, err := model.UCModeFromString(string(change.Mode))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("map temperature change for room %q: invalid HVAC mode %q: %w",
+			change.Room,
+			change.Mode,
+			err,
+		)
 	}
 
 	thMode, err := model.ThModeFromString(string(change.Preset))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("map temperature change for room %q: invalid preset %q: %w",
+			change.Room,
+			change.Preset,
+			err,
+		)
 	}
 
 	return command.TemperatureCommand{

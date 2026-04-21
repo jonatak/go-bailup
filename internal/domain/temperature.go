@@ -30,20 +30,20 @@ func (t TemperatureSettings) validateForMode(mode HVACSystemMode) error {
 	switch mode {
 	case HVACSystemModeCool:
 		if t.eco < t.comfort {
-			return ErrInvalidTemperatureSettingForMode
+			return ErrEcoMustBeBiggerThanComfort
 		}
 		if (t.eco - t.comfort) < 2 {
-			return ErrInvalidTemperatureRange
+			return ErrSetpointUnsupportedForMode
 		}
 	case HVACSystemModeHeat:
 		if t.eco > t.comfort {
-			return ErrInvalidTemperatureSettingForMode
+			return ErrComfortMustBeBiggerThanEco
 		}
 		if (t.comfort - t.eco) < 2 {
-			return ErrInvalidTemperatureRange
+			return ErrSetpointUnsupportedForMode
 		}
 	default:
-		return ErrInvalidTemperatureSettingForMode
+		return ErrSetpointUnsupportedForMode
 	}
 	return nil
 }

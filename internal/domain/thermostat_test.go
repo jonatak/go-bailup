@@ -23,7 +23,7 @@ func TestNewThermostatRejectsInvalidTemperatureSettings(t *testing.T) {
 
 	thermostat, err := domain.NewThermostat("Living Room", domain.PresetComfort, true, false, domain.TemperatureSettings{}, cool)
 
-	require.ErrorIs(t, err, domain.ErrInvalidTemperatureRange)
+	require.ErrorIs(t, err, domain.ErrSetpointUnsupportedForMode)
 	assert.Equal(t, domain.Thermostat{}, thermostat)
 }
 

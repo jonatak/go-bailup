@@ -126,7 +126,7 @@ func TestCommandFromTemperatureChangedRejectsUnknownRoom(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Nil(t, cmd)
-	assert.Contains(t, err.Error(), "thermostat \"kitchen\" not found")
+	assert.Contains(t, err.Error(), "thermostat not found")
 }
 
 func mapperTestState() *model.State {

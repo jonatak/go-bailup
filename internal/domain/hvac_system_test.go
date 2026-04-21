@@ -126,7 +126,7 @@ func TestHVACSystemCurrentSetpointRejectsModeWithoutSetpoints(t *testing.T) {
 
 	current, err := system.CurrentSetpoint("Living Room")
 
-	require.ErrorIs(t, err, domain.ErrCurrentSetPointInvalid)
+	require.ErrorIs(t, err, domain.ErrCurrentSetpointUnavailable)
 	assert.Equal(t, 0.0, current)
 }
 
@@ -217,7 +217,7 @@ func TestHVACSystemSetTemperatureRejectsInvalidComfortEcoRange(t *testing.T) {
 
 	change, err := system.SetTemperature("Living Room", domain.HVACSystemModeHeat, domain.PresetEco, 19)
 
-	require.ErrorIs(t, err, domain.ErrInvalidTemperatureRange)
+	require.ErrorIs(t, err, domain.ErrSetpointUnsupportedForMode)
 	assert.Nil(t, change)
 
 	current, currentErr := system.CurrentSetpoint("Living Room")

@@ -24,7 +24,7 @@ func NewApp() (*AppContext, error) {
 	gateway := bailup.NewGateway(bailupEmail, bailupPassword, bailupRegulation)
 	err := gateway.Connect()
 	if err != nil {
-		return nil, fmt.Errorf("an error occured: %v\n", err)
+		return nil, fmt.Errorf("connect HVAC gateway: %w", err)
 	}
 	return &AppContext{
 		HVACService: application.NewHVACService(gateway),

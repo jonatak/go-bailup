@@ -10,22 +10,25 @@ import (
 
 func TestNewTemperatureSettingsRejectsInvalidOrderingForMode(t *testing.T) {
 	testCases := []struct {
-		name    string
-		mode    domain.HVACSystemMode
-		comfort float64
-		eco     float64
+		name          string
+		mode          domain.HVACSystemMode
+		comfort       float64
+		eco           float64
+		expectedError error
 	}{
 		{
-			name:    "heat eco above comfort",
-			mode:    domain.HVACSystemModeHeat,
-			comfort: 20,
-			eco:     21,
+			name:          "heat eco above comfort",
+			mode:          domain.HVACSystemModeHeat,
+			comfort:       20,
+			eco:           21,
+			expectedError: domain.ErrComfortMustBeBiggerThanEco,
 		},
 		{
-			name:    "cool eco below comfort",
-			mode:    domain.HVACSystemModeCool,
-			comfort: 24,
-			eco:     23,
+			name:          "cool eco below comfort",
+			mode:          domain.HVACSystemModeCool,
+			comfort:       24,
+			eco:           23,
+			expectedError: domain.ErrEcoMustBeBiggerThanComfort,
 		},
 	}
 
@@ -33,7 +36,7 @@ func TestNewTemperatureSettingsRejectsInvalidOrderingForMode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			settings, err := domain.NewTemperatureSettings(tc.mode, tc.comfort, tc.eco)
 
-			require.ErrorIs(t, err, domain.ErrInvalidTemperatureSettingForMode)
+			require.ErrorIs(t, err, tc.expectedError)
 			assert.Equal(t, domain.TemperatureSettings{}, settings)
 		})
 	}
@@ -64,7 +67,7 @@ func TestNewTemperatureSettingsRejectsTooSmallComfortEcoRange(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			settings, err := domain.NewTemperatureSettings(tc.mode, tc.comfort, tc.eco)
 
-			require.ErrorIs(t, err, domain.ErrInvalidTemperatureRange)
+			require.ErrorIs(t, err, domain.ErrSetpointUnsupportedForMode)
 			assert.Equal(t, domain.TemperatureSettings{}, settings)
 		})
 	}
@@ -73,6 +76,6 @@ func TestNewTemperatureSettingsRejectsTooSmallComfortEcoRange(t *testing.T) {
 func TestNewTemperatureSettingsRejectsModeWithoutSetpoints(t *testing.T) {
 	settings, err := domain.NewTemperatureSettings(domain.HVACSystemModeOff, 20, 18)
 
-	require.ErrorIs(t, err, domain.ErrInvalidTemperatureSettingForMode)
+	require.ErrorIs(t, err, domain.ErrSetpointUnsupportedForMode)
 	assert.Equal(t, domain.TemperatureSettings{}, settings)
 }

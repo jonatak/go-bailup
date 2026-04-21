@@ -106,7 +106,7 @@ func (s *HVACSystem) CurrentSetpoint(room string) (float64, error) {
 	}
 
 	if !s.mode.SupportsSetpoint() {
-		return 0, ErrCurrentSetPointInvalid
+		return 0, ErrCurrentSetpointUnavailable
 	}
 
 	return th.currentSetpointForMode(s.mode)
