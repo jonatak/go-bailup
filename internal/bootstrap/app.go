@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/jonatak/go-bailup/internal/application"
-	"github.com/jonatak/go-bailup/internal/handler/mqtt"
 	"github.com/jonatak/go-bailup/internal/infrastructure/bailup"
+	"github.com/jonatak/go-bailup/internal/infrastructure/mqtt"
 )
 
 func NewHVACService() (*application.HVACService, error) {
@@ -27,7 +27,13 @@ func NewHVACService() (*application.HVACService, error) {
 	return application.NewHVACService(gateway), nil
 }
 
-func NewMQTTServer() (*mqtt.Handler, error) {
+func NewMQTTServer(system *application.HVACService) (*mqtt.Handler, error) {
+
+	state, err := system.CurrentState()
+	if err != nil {
+		return nil, err
+	}
+
 	host := os.Getenv("MQTT_HOST")
 	username := os.Getenv("MQTT_USERNAME")
 	password := os.Getenv("MQTT_PASSWORD")
@@ -39,15 +45,16 @@ func NewMQTTServer() (*mqtt.Handler, error) {
 		return nil, fmt.Errorf("MQTT_PORT invalid: %s", os.Getenv("MQTT_PORT"))
 	}
 
-	params := mqtt.ConnectionParams{
+	params := mqtt.HandlerParams{
 		Host:     host,
 		Username: username,
 		Password: password,
 		Port:     port,
 		ClientID: clientId,
+		Prefix:   prefix,
 	}
 
-	handler, err := mqtt.NewMQTTHandler(params, prefix)
+	handler, err := mqtt.NewMQTTHandler(params, state)
 
 	if err != nil {
 		return nil, err

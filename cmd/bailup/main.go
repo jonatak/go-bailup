@@ -7,7 +7,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/jonatak/go-bailup/internal/bootstrap"
-	"github.com/jonatak/go-bailup/internal/handler/cli"
+	"github.com/jonatak/go-bailup/internal/infrastructure/cli"
 	kongcompletion "github.com/jotaen/kong-completion"
 )
 
