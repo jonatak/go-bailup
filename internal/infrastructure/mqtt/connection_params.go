@@ -1,5 +1,7 @@
 package mqtt
 
+import "github.com/jonatak/go-bailup/internal/application"
+
 type HandlerParams struct {
 	Host       string
 	Username   string
@@ -8,7 +10,7 @@ type HandlerParams struct {
 	Port       int
 	Prefix     string
 	ErrorChan  chan<- error
-	IntentChan chan<- intent
+	IntentChan chan<- application.Intent
 }
 
 func (m HandlerParams) Validate() error {

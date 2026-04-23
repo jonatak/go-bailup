@@ -12,8 +12,9 @@ type HVACMode struct {
 }
 
 func (s *HVACMode) Run(service *application.HVACService) error {
-
-	state, err := service.SetMode(s.Mode)
+	state, err := service.ApplyIntent(application.SetModeIntent{
+		Mode: s.Mode,
+	})
 	if err != nil {
 		return err
 	}

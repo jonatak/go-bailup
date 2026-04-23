@@ -42,13 +42,13 @@ func (g *Gateway) GetHVACSystemState() (*domain.HVACSystem, error) {
 	return system, nil
 }
 
-func (g *Gateway) ApplyChange(change domain.Change) (*domain.HVACSystem, error) {
+func (g *Gateway) ApplyResolvedIntent(intent application.ResolvedIntent) (*domain.HVACSystem, error) {
 	err := g.ensureStateLoaded()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", application.ErrStateUnavailable, err)
 	}
 
-	cmd, err := CommandFromChange(g.state, change)
+	cmd, err := CommandFromResolvedIntent(g.state, intent)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", application.ErrChangeRejected, err)
 	}

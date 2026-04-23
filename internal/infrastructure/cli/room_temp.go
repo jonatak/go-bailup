@@ -61,34 +61,13 @@ func setRoomTemperature(
 	value float64,
 	isDelta bool,
 ) error {
-	system, err := service.CurrentState()
-	if err != nil {
-		return err
-	}
-
-	targetMode, err := targetHVACMode(system, mode)
-	if err != nil {
-		return err
-	}
-
-	targetPreset, err := targetThermostatPreset(system, roomName, preset)
-	if err != nil {
-		return err
-	}
-
-	if isDelta {
-		current, err := system.Setpoint(roomName, targetMode, targetPreset)
-		if err != nil {
-			return err
-		}
-		value = current + value
-	}
-
-	if mode == "current" && preset == "current" {
-		system, err = service.SetCurrentSetpoint(roomName, value)
-	} else {
-		system, err = service.SetTemperature(roomName, targetMode, targetPreset, value)
-	}
+	system, err := service.ApplyIntent(application.SetTemperatureIntent{
+		Room:    roomName,
+		Preset:  application.TemperaturePresetTarget(preset),
+		Mode:    application.TemperatureModeTarget(mode),
+		Value:   value,
+		IsDelta: isDelta,
+	})
 	if err != nil {
 		return err
 	}
@@ -102,41 +81,6 @@ func setRoomTemperature(
 	fmt.Println(formatTemperatureSettings(thermostat))
 
 	return nil
-}
-
-func targetHVACMode(system *domain.HVACSystem, mode string) (domain.HVACSystemMode, error) {
-	if mode == "current" {
-		return system.Mode(), nil
-	}
-
-	target := domain.HVACSystemMode(mode)
-	if err := target.Validate(); err != nil {
-		return "", err
-	}
-
-	return target, nil
-}
-
-func targetThermostatPreset(
-	system *domain.HVACSystem,
-	roomName string,
-	preset string,
-) (domain.ThermostatPreset, error) {
-	if preset != "current" {
-		target := domain.ThermostatPreset(preset)
-		if err := target.Validate(); err != nil {
-			return "", err
-		}
-
-		return target, nil
-	}
-
-	thermostat, err := findDomainThermostat(system, roomName)
-	if err != nil {
-		return "", err
-	}
-
-	return thermostat.Preset(), nil
 }
 
 func findDomainThermostat(system *domain.HVACSystem, roomName string) (domain.Thermostat, error) {

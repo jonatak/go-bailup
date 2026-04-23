@@ -21,10 +21,10 @@ func TestHVACServiceCurrentStateReturnsGatewayState(t *testing.T) {
 	require.NoError(t, err)
 	assert.Same(t, system, got)
 	assert.Equal(t, 1, gateway.getStateCalls)
-	assert.Equal(t, 0, gateway.applyChangeCalls)
+	assert.Equal(t, 0, gateway.applyIntentCalls)
 }
 
-func TestHVACServiceSetModeAppliesDomainChange(t *testing.T) {
+func TestHVACServiceApplyIntentSetMode(t *testing.T) {
 	updated := testHVACSystem(t, domain.HVACSystemModeCool)
 	gateway := &fakeHVACSystemGateway{
 		state:        testHVACSystem(t, domain.HVACSystemModeHeat),
@@ -32,119 +32,140 @@ func TestHVACServiceSetModeAppliesDomainChange(t *testing.T) {
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.SetMode(domain.HVACSystemModeCool)
+	got, err := service.ApplyIntent(SetModeIntent{Mode: domain.HVACSystemModeCool})
 
 	require.NoError(t, err)
 	assert.Same(t, updated, got)
 	assert.Equal(t, 1, gateway.getStateCalls)
-	assert.Equal(t, 1, gateway.applyChangeCalls)
-	assert.Equal(t, domain.HVACModeChanged{
+	assert.Equal(t, 1, gateway.applyIntentCalls)
+	assert.Equal(t, SetModeIntent{
 		Mode: domain.HVACSystemModeCool,
-	}, gateway.appliedChange)
+	}, gateway.appliedIntent)
 }
 
-func TestHVACServiceDoesNotApplyChangeWhenStateLoadFails(t *testing.T) {
+func TestHVACServiceApplyIntentDoesNotApplyWhenStateLoadFails(t *testing.T) {
 	wantErr := errors.New("state failed")
 	gateway := &fakeHVACSystemGateway{
 		getStateErr: wantErr,
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.SetMode(domain.HVACSystemModeCool)
+	got, err := service.ApplyIntent(SetModeIntent{Mode: domain.HVACSystemModeCool})
 
 	require.ErrorIs(t, err, wantErr)
 	assert.Nil(t, got)
 	assert.Equal(t, 1, gateway.getStateCalls)
-	assert.Equal(t, 0, gateway.applyChangeCalls)
+	assert.Equal(t, 0, gateway.applyIntentCalls)
 }
 
-func TestHVACServiceDoesNotApplyChangeWhenDomainRejectsCommand(t *testing.T) {
+func TestHVACServiceApplyIntentDoesNotApplyWhenDomainRejectsCommand(t *testing.T) {
 	gateway := &fakeHVACSystemGateway{
 		state: testHVACSystem(t, domain.HVACSystemModeHeat),
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.SetMode(domain.HVACSystemMode("invalid"))
+	got, err := service.ApplyIntent(SetModeIntent{Mode: domain.HVACSystemMode("invalid")})
 
 	require.ErrorIs(t, err, domain.ErrInvalidHVACMode)
 	assert.Nil(t, got)
 	assert.Equal(t, 1, gateway.getStateCalls)
-	assert.Equal(t, 0, gateway.applyChangeCalls)
+	assert.Equal(t, 0, gateway.applyIntentCalls)
 }
 
-func TestHVACServiceReturnsApplyChangeError(t *testing.T) {
+func TestHVACServiceApplyIntentReturnsGatewayError(t *testing.T) {
 	wantErr := errors.New("apply failed")
 	gateway := &fakeHVACSystemGateway{
 		state:          testHVACSystem(t, domain.HVACSystemModeHeat),
-		applyChangeErr: wantErr,
+		applyIntentErr: wantErr,
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.SetMode(domain.HVACSystemModeCool)
+	got, err := service.ApplyIntent(SetModeIntent{Mode: domain.HVACSystemModeCool})
 
 	require.ErrorIs(t, err, wantErr)
 	assert.Nil(t, got)
 	assert.Equal(t, 1, gateway.getStateCalls)
-	assert.Equal(t, 1, gateway.applyChangeCalls)
+	assert.Equal(t, 1, gateway.applyIntentCalls)
 }
 
-func TestHVACServiceMethodsApplyExpectedChanges(t *testing.T) {
+func TestHVACServiceApplyIntentUsesExpectedResolvedIntents(t *testing.T) {
 	testCases := []struct {
 		name string
 		act  func(*HVACService) (*domain.HVACSystem, error)
-		want domain.Change
+		want ResolvedIntent
 	}{
 		{
 			name: "set room preset",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.SetRoomPreset("Living Room", domain.PresetEco)
+				return service.ApplyIntent(SetRoomPresetIntent{
+					Room:   "Living Room",
+					Preset: domain.PresetEco,
+				})
 			},
-			want: domain.RoomPresetChanged{
+			want: SetRoomPresetIntent{
 				Room:   "Living Room",
 				Preset: domain.PresetEco,
 			},
 		},
 		{
-			name: "turn room on",
+			name: "set room power on",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.TurnRoomOn("Living Room")
+				return service.ApplyIntent(SetRoomPowerIntent{
+					Room: "Living Room",
+					On:   true,
+				})
 			},
-			want: domain.RoomPowerChanged{
+			want: SetRoomPowerIntent{
 				Room: "Living Room",
 				On:   true,
 			},
 		},
 		{
-			name: "turn room off",
+			name: "set room power off",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.TurnRoomOff("Living Room")
+				return service.ApplyIntent(SetRoomPowerIntent{
+					Room: "Living Room",
+					On:   false,
+				})
 			},
-			want: domain.RoomPowerChanged{
+			want: SetRoomPowerIntent{
 				Room: "Living Room",
 				On:   false,
 			},
 		},
 		{
-			name: "set current setpoint",
+			name: "set temperature current/current",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.SetCurrentSetpoint("Living Room", 21)
+				return service.ApplyIntent(SetTemperatureIntent{
+					Room:    "Living Room",
+					Preset:  TemperaturePresetCurrent,
+					Mode:    TemperatureModeCurrent,
+					Value:   21,
+					IsDelta: false,
+				})
 			},
-			want: domain.TemperatureChanged{
+			want: ResolvedSetTemperatureIntent{
 				Room:   "Living Room",
-				Mode:   domain.HVACSystemModeHeat,
 				Preset: domain.PresetComfort,
+				Mode:   domain.HVACSystemModeHeat,
 				Value:  21,
 			},
 		},
 		{
-			name: "set temperature",
+			name: "set temperature explicit target",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.SetTemperature("Living Room", domain.HVACSystemModeCool, domain.PresetEco, 27)
+				return service.ApplyIntent(SetTemperatureIntent{
+					Room:    "Living Room",
+					Preset:  TemperaturePresetEco,
+					Mode:    TemperatureModeCool,
+					Value:   27,
+					IsDelta: false,
+				})
 			},
-			want: domain.TemperatureChanged{
+			want: ResolvedSetTemperatureIntent{
 				Room:   "Living Room",
-				Mode:   domain.HVACSystemModeCool,
 				Preset: domain.PresetEco,
+				Mode:   domain.HVACSystemModeCool,
 				Value:  27,
 			},
 		},
@@ -164,8 +185,90 @@ func TestHVACServiceMethodsApplyExpectedChanges(t *testing.T) {
 			require.NoError(t, err)
 			assert.Same(t, updated, got)
 			assert.Equal(t, 1, gateway.getStateCalls)
-			assert.Equal(t, 1, gateway.applyChangeCalls)
-			assert.Equal(t, tc.want, gateway.appliedChange)
+			assert.Equal(t, 1, gateway.applyIntentCalls)
+			assert.Equal(t, tc.want, gateway.appliedIntent)
+		})
+	}
+}
+
+func TestHVACServiceApplyIntentTemperatureResolvesTargets(t *testing.T) {
+	testCases := []struct {
+		name string
+		act  func(*HVACService) (*domain.HVACSystem, error)
+		want ResolvedIntent
+	}{
+		{
+			name: "set temperature current target becomes current setpoint change",
+			act: func(service *HVACService) (*domain.HVACSystem, error) {
+				return service.ApplyIntent(SetTemperatureIntent{
+					Room:    "Living Room",
+					Preset:  TemperaturePresetCurrent,
+					Mode:    TemperatureModeCurrent,
+					Value:   21,
+					IsDelta: false,
+				})
+			},
+			want: ResolvedSetTemperatureIntent{
+				Room:   "Living Room",
+				Preset: domain.PresetComfort,
+				Mode:   domain.HVACSystemModeHeat,
+				Value:  21,
+			},
+		},
+		{
+			name: "set temperature explicit target",
+			act: func(service *HVACService) (*domain.HVACSystem, error) {
+				return service.ApplyIntent(SetTemperatureIntent{
+					Room:    "Living Room",
+					Preset:  TemperaturePresetEco,
+					Mode:    TemperatureModeCool,
+					Value:   27,
+					IsDelta: false,
+				})
+			},
+			want: ResolvedSetTemperatureIntent{
+				Room:   "Living Room",
+				Preset: domain.PresetEco,
+				Mode:   domain.HVACSystemModeCool,
+				Value:  27,
+			},
+		},
+		{
+			name: "set temperature delta on resolved target",
+			act: func(service *HVACService) (*domain.HVACSystem, error) {
+				return service.ApplyIntent(SetTemperatureIntent{
+					Room:    "Living Room",
+					Preset:  TemperaturePresetComfort,
+					Mode:    TemperatureModeHeat,
+					Value:   1,
+					IsDelta: true,
+				})
+			},
+			want: ResolvedSetTemperatureIntent{
+				Room:   "Living Room",
+				Preset: domain.PresetComfort,
+				Mode:   domain.HVACSystemModeHeat,
+				Value:  21,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			updated := testHVACSystem(t, domain.HVACSystemModeHeat)
+			gateway := &fakeHVACSystemGateway{
+				state:        testHVACSystem(t, domain.HVACSystemModeHeat),
+				updatedState: updated,
+			}
+			service := NewHVACService(gateway)
+
+			got, err := tc.act(service)
+
+			require.NoError(t, err)
+			assert.Same(t, updated, got)
+			assert.Equal(t, 1, gateway.getStateCalls)
+			assert.Equal(t, 1, gateway.applyIntentCalls)
+			assert.Equal(t, tc.want, gateway.appliedIntent)
 		})
 	}
 }

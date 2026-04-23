@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
 )
 
@@ -52,7 +53,7 @@ func (m *Handler) Close() {
 	m.client.Disconnect(100)
 }
 
-func (m *Handler) registerSubscription(system *domain.HVACSystem, intentChan chan<- intent) {
+func (m *Handler) registerSubscription(system *domain.HVACSystem, intentChan chan<- application.Intent) {
 	th := system.Thermostats()
 	subscriber := make([]*subscription, 0, len(th)+1)
 	subscriber = append(subscriber, &subscription{

@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
 )
 
 type subscription struct {
 	room       string
-	intentChan chan<- intent
+	intentChan chan<- application.Intent
 	errorChan  chan<- error
 }
 
@@ -23,8 +24,8 @@ func (s *subscription) setMode(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	s.intentChan <- setModeIntent{
-		mode: mode,
+	s.intentChan <- application.SetModeIntent{
+		Mode: mode,
 	}
 }
 
@@ -36,9 +37,12 @@ func (s *subscription) setTemperature(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	s.intentChan <- setTemperatureIntent{
-		room:  s.room,
-		value: value,
+	s.intentChan <- application.SetTemperatureIntent{
+		Room:    s.room,
+		Preset:  application.TemperaturePresetCurrent,
+		Mode:    application.TemperatureModeCurrent,
+		Value:   value,
+		IsDelta: false,
 	}
 }
 
@@ -46,12 +50,14 @@ func (s *subscription) turnOnOff(_ mqtt.Client, msg mqtt.Message) {
 	value := strings.TrimSpace(string(msg.Payload()))
 	switch value {
 	case "auto":
-		s.intentChan <- turnRoomOnIntent{
-			room: s.room,
+		s.intentChan <- application.SetRoomPowerIntent{
+			Room: s.room,
+			On:   true,
 		}
 	case "off":
-		s.intentChan <- turnRoomOffIntent{
-			room: s.room,
+		s.intentChan <- application.SetRoomPowerIntent{
+			Room: s.room,
+			On:   false,
 		}
 	default:
 		s.errorChan <- fmt.Errorf("received invalid mode %s for room %s", value, s.room)
@@ -67,8 +73,8 @@ func (s *subscription) setPreset(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	s.intentChan <- setPresetIntent{
-		room:   s.room,
-		preset: preset,
+	s.intentChan <- application.SetRoomPresetIntent{
+		Room:   s.room,
+		Preset: preset,
 	}
 }

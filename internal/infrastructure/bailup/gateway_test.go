@@ -48,12 +48,12 @@ func TestGatewayGetHVACSystemStateWrapsStateMappingError(t *testing.T) {
 	assert.True(t, errors.Is(err, domain.ErrComfortMustBeBiggerThanEco))
 }
 
-func TestGatewayApplyChangeWrapsStateLoadError(t *testing.T) {
+func TestGatewayApplyResolvedIntentWrapsStateLoadError(t *testing.T) {
 	gateway := &Gateway{
 		client: NewBailup("", "", ""),
 	}
 
-	system, err := gateway.ApplyChange(domain.HVACModeChanged{
+	system, err := gateway.ApplyResolvedIntent(application.SetModeIntent{
 		Mode: domain.HVACSystemModeCool,
 	})
 
@@ -62,12 +62,12 @@ func TestGatewayApplyChangeWrapsStateLoadError(t *testing.T) {
 	assert.True(t, errors.Is(err, application.ErrStateUnavailable))
 }
 
-func TestGatewayApplyChangeWrapsChangeMappingError(t *testing.T) {
+func TestGatewayApplyResolvedIntentWrapsIntentMappingError(t *testing.T) {
 	gateway := &Gateway{
 		state: mapperTestState(),
 	}
 
-	system, err := gateway.ApplyChange(domain.RoomPowerChanged{
+	system, err := gateway.ApplyResolvedIntent(application.SetRoomPowerIntent{
 		Room: "Kitchen",
 		On:   true,
 	})

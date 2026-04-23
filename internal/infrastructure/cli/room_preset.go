@@ -13,8 +13,10 @@ type RoomPreset struct {
 }
 
 func (r *RoomPreset) Run(service *application.HVACService) error {
-
-	_, err := service.SetRoomPreset(r.Name, r.Preset)
+	_, err := service.ApplyIntent(application.SetRoomPresetIntent{
+		Room:   r.Name,
+		Preset: r.Preset,
+	})
 	if err != nil {
 		return err
 	}

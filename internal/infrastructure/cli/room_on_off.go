@@ -15,7 +15,10 @@ type RoomOff struct {
 }
 
 func (o *RoomOn) Run(service *application.HVACService) error {
-	_, err := service.TurnRoomOn(o.Name)
+	_, err := service.ApplyIntent(application.SetRoomPowerIntent{
+		Room: o.Name,
+		On:   true,
+	})
 	if err != nil {
 		return err
 	}
@@ -25,7 +28,10 @@ func (o *RoomOn) Run(service *application.HVACService) error {
 }
 
 func (o *RoomOff) Run(service *application.HVACService) error {
-	_, err := service.TurnRoomOff(o.Name)
+	_, err := service.ApplyIntent(application.SetRoomPowerIntent{
+		Room: o.Name,
+		On:   false,
+	})
 	if err != nil {
 		return err
 	}

@@ -27,7 +27,11 @@ func NewHVACService() (*application.HVACService, error) {
 	return application.NewHVACService(gateway), nil
 }
 
-func NewMQTTServer(system *application.HVACService) (*mqtt.Handler, error) {
+func NewMQTTServer(
+	system *application.HVACService,
+	intentChan chan<- application.Intent,
+	errorChan chan<- error,
+) (*mqtt.Handler, error) {
 
 	state, err := system.CurrentState()
 	if err != nil {
@@ -46,12 +50,14 @@ func NewMQTTServer(system *application.HVACService) (*mqtt.Handler, error) {
 	}
 
 	params := mqtt.HandlerParams{
-		Host:     host,
-		Username: username,
-		Password: password,
-		Port:     port,
-		ClientID: clientId,
-		Prefix:   prefix,
+		Host:       host,
+		Username:   username,
+		Password:   password,
+		Port:       port,
+		ClientID:   clientId,
+		Prefix:     prefix,
+		ErrorChan:  errorChan,
+		IntentChan: intentChan,
 	}
 
 	handler, err := mqtt.NewMQTTHandler(params, state)
