@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/jonatak/go-bailup/internal/app"
+	"github.com/jonatak/go-bailup/internal/application"
 )
 
 type RoomOn struct {
@@ -14,8 +14,8 @@ type RoomOff struct {
 	RoomTarget
 }
 
-func (o *RoomOn) Run(appCtx *app.AppContext) error {
-	_, err := appCtx.HVACService.TurnRoomOn(o.Name)
+func (o *RoomOn) Run(service *application.HVACService) error {
+	_, err := service.TurnRoomOn(o.Name)
 	if err != nil {
 		return err
 	}
@@ -24,8 +24,8 @@ func (o *RoomOn) Run(appCtx *app.AppContext) error {
 	return nil
 }
 
-func (o *RoomOff) Run(appCtx *app.AppContext) error {
-	_, err := appCtx.HVACService.TurnRoomOff(o.Name)
+func (o *RoomOff) Run(service *application.HVACService) error {
+	_, err := service.TurnRoomOff(o.Name)
 	if err != nil {
 		return err
 	}

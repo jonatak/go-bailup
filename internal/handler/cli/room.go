@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/jonatak/go-bailup/internal/app"
+	"github.com/jonatak/go-bailup/internal/application"
 )
 
 type RoomTarget struct {
@@ -20,8 +20,8 @@ type Room struct {
 
 type RoomList struct{}
 
-func (r *RoomList) Run(ctx *app.AppContext) error {
-	state, err := ctx.HVACService.CurrentState()
+func (r *RoomList) Run(service *application.HVACService) error {
+	state, err := service.CurrentState()
 	if err != nil {
 		return err
 	}

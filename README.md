@@ -125,10 +125,11 @@ Use the generated output according to your shell setup.
 The project is split into a few focused packages:
 
 - `cmd/bailup`: installable CLI entrypoint.
-- `internal/app`: application initialization and environment loading.
+- `internal/bootstrap`: application initialization and environment loading.
 - `internal/domain`: HVAC aggregate, thermostat behavior, setpoint rules, and domain change objects.
 - `internal/application`: use-case orchestration and outbound gateway port.
-- `internal/infrastructure/cli`: Kong-based CLI commands and terminal formatting.
+- `internal/handler/cli`: Kong-based CLI commands and terminal formatting.
+- `internal/handler/mqtt`: MQTT command/message handling.
 - `internal/infrastructure/bailup`: authenticated Baillconnect gateway, login flow, state mapping, and command mapping.
 - `internal/infrastructure/bailup/command`: JSON payload types sent to Baillconnect.
 - `internal/infrastructure/bailup/model`: Baillconnect API DTOs and mode conversions.

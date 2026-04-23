@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jonatak/go-bailup/internal/app"
+	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
 )
 
@@ -41,27 +41,27 @@ type RoomTempDown struct {
 	TemperatureTarget
 }
 
-func (r *RoomTempSet) Run(appCtx *app.AppContext) error {
-	return setRoomTemperature(appCtx, r.Name, r.Preset, r.Mode, r.Value, false)
+func (r *RoomTempSet) Run(service *application.HVACService) error {
+	return setRoomTemperature(service, r.Name, r.Preset, r.Mode, r.Value, false)
 }
 
-func (r *RoomTempUp) Run(appCtx *app.AppContext) error {
-	return setRoomTemperature(appCtx, r.Name, r.Preset, r.Mode, r.By, true)
+func (r *RoomTempUp) Run(service *application.HVACService) error {
+	return setRoomTemperature(service, r.Name, r.Preset, r.Mode, r.By, true)
 }
 
-func (r *RoomTempDown) Run(appCtx *app.AppContext) error {
-	return setRoomTemperature(appCtx, r.Name, r.Preset, r.Mode, -r.By, true)
+func (r *RoomTempDown) Run(service *application.HVACService) error {
+	return setRoomTemperature(service, r.Name, r.Preset, r.Mode, -r.By, true)
 }
 
 func setRoomTemperature(
-	appCtx *app.AppContext,
+	service *application.HVACService,
 	roomName string,
 	preset string,
 	mode string,
 	value float64,
 	isDelta bool,
 ) error {
-	system, err := appCtx.HVACService.CurrentState()
+	system, err := service.CurrentState()
 	if err != nil {
 		return err
 	}
@@ -85,9 +85,9 @@ func setRoomTemperature(
 	}
 
 	if mode == "current" && preset == "current" {
-		system, err = appCtx.HVACService.SetCurrentSetpoint(roomName, value)
+		system, err = service.SetCurrentSetpoint(roomName, value)
 	} else {
-		system, err = appCtx.HVACService.SetTemperature(roomName, targetMode, targetPreset, value)
+		system, err = service.SetTemperature(roomName, targetMode, targetPreset, value)
 	}
 	if err != nil {
 		return err

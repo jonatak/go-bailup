@@ -9,20 +9,16 @@ import (
 
 type Handler struct {
 	client mqtt.Client
-	topic  string
+	prefix string
 }
 
-func NewMQTTContext(param ConnectionParams, topic string) (*Handler, error) {
-	if topic == "" {
-		return nil, ErrInvalidTopic
-	}
-
+func NewMQTTHandler(param ConnectionParams, prefix string) (*Handler, error) {
 	if err := param.Validate(); err != nil {
 		return nil, err
 	}
 	mqttContext := &Handler{
 		client: nil,
-		topic:  topic,
+		prefix: prefix,
 	}
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", param.Host, param.Port))

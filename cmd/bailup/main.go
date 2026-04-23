@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/jonatak/go-bailup/internal/app"
-	"github.com/jonatak/go-bailup/internal/infrastructure/cli"
+	"github.com/jonatak/go-bailup/internal/bootstrap"
+	"github.com/jonatak/go-bailup/internal/handler/cli"
 	kongcompletion "github.com/jotaen/kong-completion"
 )
 
@@ -30,16 +30,17 @@ func main() {
 		return
 	}
 
-	appCtx, err := app.NewApp()
+	if ctx.Command() != "serve" {
+		service, err := bootstrap.NewHVACService()
 
-	if err != nil {
-		if errors.Is(err, app.InitError) {
-			fmt.Fprintln(os.Stderr, app.InitError)
+		if err != nil {
+			if errors.Is(err, bootstrap.InitError) {
+				fmt.Fprintln(os.Stderr, bootstrap.InitError)
+			}
+			return
 		}
-		return
+		ctx.Bind(service)
 	}
-
-	ctx.Bind(appCtx)
 
 	err = ctx.Run()
 	if err != nil {

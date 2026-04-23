@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/jonatak/go-bailup/internal/app"
+	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
 )
 
@@ -12,9 +12,9 @@ type RoomPreset struct {
 	RoomTarget
 }
 
-func (r *RoomPreset) Run(appCtx *app.AppContext) error {
+func (r *RoomPreset) Run(service *application.HVACService) error {
 
-	_, err := appCtx.HVACService.SetRoomPreset(r.Name, r.Preset)
+	_, err := service.SetRoomPreset(r.Name, r.Preset)
 	if err != nil {
 		return err
 	}
