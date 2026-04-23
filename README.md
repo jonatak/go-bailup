@@ -126,25 +126,33 @@ The project is split into a few focused packages:
 
 - `cmd/bailup`: installable CLI entrypoint.
 - `internal/bootstrap`: application initialization and environment loading.
-- `internal/domain`: HVAC aggregate, thermostat behavior, setpoint rules, and domain change objects.
-- `internal/application`: use-case orchestration and outbound gateway port.
-- `internal/handler/cli`: Kong-based CLI commands and terminal formatting.
-- `internal/handler/mqtt`: MQTT command/message handling.
-- `internal/infrastructure/bailup`: authenticated Baillconnect gateway, login flow, state mapping, and command mapping.
+- `internal/domain`: HVAC aggregate, thermostat behavior, and setpoint rules.
+- `internal/application`: use-case orchestration, inbound intents, target resolution, and outbound gateway port.
+- `internal/infrastructure/cli`: Kong-based CLI commands and terminal formatting.
+- `internal/infrastructure/mqtt`: MQTT command/message handling.
+- `internal/infrastructure/bailup`: authenticated Baillconnect gateway, login flow, state mapping, and resolved-intent to command mapping.
 - `internal/infrastructure/bailup/command`: JSON payload types sent to Baillconnect.
 - `internal/infrastructure/bailup/model`: Baillconnect API DTOs and mode conversions.
 
 The main flow is:
 
 ```text
-CLI command
-  -> application.HVACService
+CLI / MQTT message
+  -> application.Intent
+  -> application.HVACService.ApplyIntent
   -> domain.HVACSystem
-  -> domain.Change
+  -> application.ResolvedIntent
   -> application.HVACSystemGateway
   -> infrastructure/bailup.Gateway
   -> Baillconnect HTTP API
 ```
+
+Temperature requests use a two-step model in `application`:
+
+- `Intent`: inbound request semantics such as `current` mode/preset or delta-based temperature changes.
+- `ResolvedIntent`: gateway-ready operations with fully resolved domain values.
+
+That keeps request interpretation in the application layer and keeps the Bailup adapter focused on vendor-specific command mapping.
 
 ## Development
 
@@ -170,7 +178,7 @@ make build
 
 ## Roadmap
 
-- [ ] Add MQTT / Home Assistant integration.
+- [ ] Finish the MQTT / Home Assistant processor loop and state publishing.
 - [ ] Reduce HTTP headers to the minimum required by Baillconnect.
 - [ ] Add a real server-side session check if needed.
 
