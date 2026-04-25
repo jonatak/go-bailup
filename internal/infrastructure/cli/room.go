@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jonatak/go-bailup/internal/application"
@@ -20,8 +21,8 @@ type Room struct {
 
 type RoomList struct{}
 
-func (r *RoomList) Run(service *application.HVACService) error {
-	state, err := service.CurrentState()
+func (r *RoomList) Run(ctx context.Context, service *application.HVACService) error {
+	state, err := service.CurrentState(ctx)
 	if err != nil {
 		return err
 	}

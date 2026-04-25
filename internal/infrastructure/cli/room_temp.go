@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -41,19 +42,20 @@ type RoomTempDown struct {
 	TemperatureTarget
 }
 
-func (r *RoomTempSet) Run(service *application.HVACService) error {
-	return setRoomTemperature(service, r.Name, r.Preset, r.Mode, r.Value, false)
+func (r *RoomTempSet) Run(ctx context.Context, service *application.HVACService) error {
+	return setRoomTemperature(ctx, service, r.Name, r.Preset, r.Mode, r.Value, false)
 }
 
-func (r *RoomTempUp) Run(service *application.HVACService) error {
-	return setRoomTemperature(service, r.Name, r.Preset, r.Mode, r.By, true)
+func (r *RoomTempUp) Run(ctx context.Context, service *application.HVACService) error {
+	return setRoomTemperature(ctx, service, r.Name, r.Preset, r.Mode, r.By, true)
 }
 
-func (r *RoomTempDown) Run(service *application.HVACService) error {
-	return setRoomTemperature(service, r.Name, r.Preset, r.Mode, -r.By, true)
+func (r *RoomTempDown) Run(ctx context.Context, service *application.HVACService) error {
+	return setRoomTemperature(ctx, service, r.Name, r.Preset, r.Mode, -r.By, true)
 }
 
 func setRoomTemperature(
+	ctx context.Context,
 	service *application.HVACService,
 	roomName string,
 	preset string,
@@ -61,7 +63,7 @@ func setRoomTemperature(
 	value float64,
 	isDelta bool,
 ) error {
-	system, err := service.ApplyIntent(application.SetTemperatureIntent{
+	system, err := service.ApplyIntent(ctx, application.SetTemperatureIntent{
 		Room:    roomName,
 		Preset:  application.TemperaturePresetTarget(preset),
 		Mode:    application.TemperatureModeTarget(mode),

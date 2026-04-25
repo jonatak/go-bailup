@@ -1,7 +1,10 @@
 package bailup
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
@@ -21,15 +24,15 @@ func NewGateway(email, password, regulation string) *Gateway {
 	}
 }
 
-func (g *Gateway) Connect() error {
-	if err := g.client.Connect(); err != nil {
+func (g *Gateway) Connect(ctx context.Context) error {
+	if err := g.client.Connect(ctx); err != nil {
 		return fmt.Errorf("%w: %w", application.ErrGatewayUnavailable, err)
 	}
 	return nil
 }
 
-func (g *Gateway) GetHVACSystemState() (*domain.HVACSystem, error) {
-	err := g.ensureStateLoaded()
+func (g *Gateway) GetHVACSystemState(ctx context.Context) (*domain.HVACSystem, error) {
+	err := g.ensureStateLoaded(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", application.ErrStateUnavailable, err)
 	}
@@ -42,25 +45,35 @@ func (g *Gateway) GetHVACSystemState() (*domain.HVACSystem, error) {
 	return system, nil
 }
 
-func (g *Gateway) ApplyResolvedIntent(intent application.ResolvedIntent) (*domain.HVACSystem, error) {
-	err := g.ensureStateLoaded()
-	if err != nil {
+func (g *Gateway) ApplyResolvedIntent(ctx context.Context, intent application.ResolvedIntent) (*domain.HVACSystem, error) {
+
+	if err := g.ensureStateLoaded(ctx); err != nil {
 		return nil, fmt.Errorf("%w: %w", application.ErrStateUnavailable, err)
 	}
 
-	cmd, err := CommandFromResolvedIntent(g.state, intent)
+	var result *model.State
+	err := g.withReconnect(ctx, func() error {
+		cmd, err := CommandFromResolvedIntent(g.state, intent)
+		if err != nil {
+			return fmt.Errorf("%w: %w", application.ErrChangeRejected, err)
+		}
+		s, err := g.client.Execute(ctx, cmd)
+		if err != nil {
+			if errors.Is(err, ErrDisconnected) {
+				return fmt.Errorf("%w: %w", application.ErrGatewayUnavailable, err)
+			}
+			return fmt.Errorf("%w: %w", application.ErrChangeRejected, err)
+		}
+		result = s
+		return nil
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", application.ErrChangeRejected, err)
+		return nil, err
 	}
 
-	s, err := g.client.Execute(cmd)
-
-	if err != nil {
-		return nil, fmt.Errorf("%w: %w", application.ErrChangeRejected, err)
-	}
-
-	g.state = s
-	system, err := HVACSystemFromState(s)
+	g.state = result
+	system, err := HVACSystemFromState(result)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", application.ErrStateUnavailable, err)
 	}
@@ -68,13 +81,40 @@ func (g *Gateway) ApplyResolvedIntent(intent application.ResolvedIntent) (*domai
 	return system, nil
 }
 
-func (g *Gateway) ensureStateLoaded() error {
-	if g.state == nil {
-		s, err := g.client.GetState()
+func (g *Gateway) withReconnect(ctx context.Context, op func() error) error {
+	for {
+		err := op()
+		if err == nil {
+			return nil
+		}
+		if !errors.Is(err, ErrDisconnected) {
+			return err
+		}
+
+		if connectErr := g.client.Connect(ctx); connectErr != nil {
+			select {
+			case <-time.After(1 * time.Second):
+			case <-ctx.Done():
+				return application.ErrGatewayUnavailable
+			}
+			continue
+		}
+	}
+
+	return application.ErrGatewayUnavailable
+}
+
+func (g *Gateway) ensureStateLoaded(ctx context.Context) error {
+	if g.state != nil {
+		return nil
+	}
+
+	return g.withReconnect(ctx, func() error {
+		s, err := g.client.GetState(ctx)
 		if err != nil {
 			return err
 		}
 		g.state = s
-	}
-	return nil
+		return nil
+	})
 }

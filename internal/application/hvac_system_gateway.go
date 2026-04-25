@@ -1,9 +1,13 @@
 package application
 
-import "github.com/jonatak/go-bailup/internal/domain"
+import (
+	"context"
+
+	"github.com/jonatak/go-bailup/internal/domain"
+)
 
 type HVACSystemGateway interface {
-	Connect() error
-	GetHVACSystemState() (*domain.HVACSystem, error)
-	ApplyResolvedIntent(ResolvedIntent) (*domain.HVACSystem, error)
+	Connect(context.Context) error
+	GetHVACSystemState(context.Context) (*domain.HVACSystem, error)
+	ApplyResolvedIntent(context.Context, ResolvedIntent) (*domain.HVACSystem, error)
 }

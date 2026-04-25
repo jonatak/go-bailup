@@ -40,7 +40,7 @@ func (b *Bailup) IsConnected() bool {
 func (b *Bailup) CurrentXSRFToken() (string, error) {
 	xsrf, found := findCookie(b.client.Jar.Cookies(bailupBaseURL), "XSRF-TOKEN")
 	if !found {
-		return "", NewBailupError("xsrf token not found", nil)
+		return "", NewBailupError("xsrf token not found", ErrDisconnected)
 	}
 
 	return xsrf, nil

@@ -1,6 +1,7 @@
 package bailup
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestGatewayGetHVACSystemStateWrapsStateLoadError(t *testing.T) {
 		client: NewBailup("", "", ""),
 	}
 
-	system, err := gateway.GetHVACSystemState()
+	system, err := gateway.GetHVACSystemState(context.Background())
 
 	require.Error(t, err)
 	assert.Nil(t, system)
@@ -40,7 +41,7 @@ func TestGatewayGetHVACSystemStateWrapsStateMappingError(t *testing.T) {
 		},
 	}
 
-	system, err := gateway.GetHVACSystemState()
+	system, err := gateway.GetHVACSystemState(context.Background())
 
 	require.Error(t, err)
 	assert.Nil(t, system)
@@ -53,7 +54,7 @@ func TestGatewayApplyResolvedIntentWrapsStateLoadError(t *testing.T) {
 		client: NewBailup("", "", ""),
 	}
 
-	system, err := gateway.ApplyResolvedIntent(application.SetModeIntent{
+	system, err := gateway.ApplyResolvedIntent(context.Background(), application.SetModeIntent{
 		Mode: domain.HVACSystemModeCool,
 	})
 
@@ -67,7 +68,7 @@ func TestGatewayApplyResolvedIntentWrapsIntentMappingError(t *testing.T) {
 		state: mapperTestState(),
 	}
 
-	system, err := gateway.ApplyResolvedIntent(application.SetRoomPowerIntent{
+	system, err := gateway.ApplyResolvedIntent(context.Background(), application.SetRoomPowerIntent{
 		Room: "Kitchen",
 		On:   true,
 	})

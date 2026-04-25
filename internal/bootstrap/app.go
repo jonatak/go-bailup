@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -20,7 +21,7 @@ func NewHVACService() (*application.HVACService, error) {
 	}
 
 	gateway := bailup.NewGateway(bailupEmail, bailupPassword, bailupRegulation)
-	err := gateway.Connect()
+	err := gateway.Connect(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("connect HVAC gateway: %w", err)
 	}
@@ -33,7 +34,7 @@ func NewMQTTServer(
 	errorChan chan<- error,
 ) (*mqtt.Handler, error) {
 
-	state, err := system.CurrentState()
+	state, err := system.CurrentState(context.Background())
 	if err != nil {
 		return nil, err
 	}

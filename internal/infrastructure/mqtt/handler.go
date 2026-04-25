@@ -2,7 +2,6 @@ package mqtt
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -50,7 +49,9 @@ func (m *Handler) Connect() error {
 }
 
 func (m *Handler) Close() {
-	m.client.Disconnect(100)
+	if m.client.IsConnected() {
+		m.client.Disconnect(100)
+	}
 }
 
 func (m *Handler) registerSubscription(system *domain.HVACSystem, intentChan chan<- application.Intent) {
@@ -98,7 +99,7 @@ func (m *Handler) subscribe() error {
 }
 
 func (m *Handler) messageHandler(_ mqtt.Client, msg mqtt.Message) {
-	log.Printf("received message")
+	m.errorChan <- fmt.Errorf("received unhandled message from topic: %s", msg.Topic())
 }
 
 func (m *Handler) connectionHandler(client mqtt.Client) {

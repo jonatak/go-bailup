@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestHVACServiceCurrentStateReturnsGatewayState(t *testing.T) {
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.CurrentState()
+	got, err := service.CurrentState(context.Background())
 
 	require.NoError(t, err)
 	assert.Same(t, system, got)
@@ -32,7 +33,7 @@ func TestHVACServiceApplyIntentSetMode(t *testing.T) {
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.ApplyIntent(SetModeIntent{Mode: domain.HVACSystemModeCool})
+	got, err := service.ApplyIntent(context.Background(), SetModeIntent{Mode: domain.HVACSystemModeCool})
 
 	require.NoError(t, err)
 	assert.Same(t, updated, got)
@@ -50,7 +51,7 @@ func TestHVACServiceApplyIntentDoesNotApplyWhenStateLoadFails(t *testing.T) {
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.ApplyIntent(SetModeIntent{Mode: domain.HVACSystemModeCool})
+	got, err := service.ApplyIntent(context.Background(), SetModeIntent{Mode: domain.HVACSystemModeCool})
 
 	require.ErrorIs(t, err, wantErr)
 	assert.Nil(t, got)
@@ -64,7 +65,7 @@ func TestHVACServiceApplyIntentDoesNotApplyWhenDomainRejectsCommand(t *testing.T
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.ApplyIntent(SetModeIntent{Mode: domain.HVACSystemMode("invalid")})
+	got, err := service.ApplyIntent(context.Background(), SetModeIntent{Mode: domain.HVACSystemMode("invalid")})
 
 	require.ErrorIs(t, err, domain.ErrInvalidHVACMode)
 	assert.Nil(t, got)
@@ -80,7 +81,7 @@ func TestHVACServiceApplyIntentReturnsGatewayError(t *testing.T) {
 	}
 	service := NewHVACService(gateway)
 
-	got, err := service.ApplyIntent(SetModeIntent{Mode: domain.HVACSystemModeCool})
+	got, err := service.ApplyIntent(context.Background(), SetModeIntent{Mode: domain.HVACSystemModeCool})
 
 	require.ErrorIs(t, err, wantErr)
 	assert.Nil(t, got)
@@ -97,7 +98,7 @@ func TestHVACServiceApplyIntentUsesExpectedResolvedIntents(t *testing.T) {
 		{
 			name: "set room preset",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.ApplyIntent(SetRoomPresetIntent{
+				return service.ApplyIntent(context.Background(), SetRoomPresetIntent{
 					Room:   "Living Room",
 					Preset: domain.PresetEco,
 				})
@@ -110,7 +111,7 @@ func TestHVACServiceApplyIntentUsesExpectedResolvedIntents(t *testing.T) {
 		{
 			name: "set room power on",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.ApplyIntent(SetRoomPowerIntent{
+				return service.ApplyIntent(context.Background(), SetRoomPowerIntent{
 					Room: "Living Room",
 					On:   true,
 				})
@@ -123,7 +124,7 @@ func TestHVACServiceApplyIntentUsesExpectedResolvedIntents(t *testing.T) {
 		{
 			name: "set room power off",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.ApplyIntent(SetRoomPowerIntent{
+				return service.ApplyIntent(context.Background(), SetRoomPowerIntent{
 					Room: "Living Room",
 					On:   false,
 				})
@@ -136,7 +137,7 @@ func TestHVACServiceApplyIntentUsesExpectedResolvedIntents(t *testing.T) {
 		{
 			name: "set temperature current/current",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.ApplyIntent(SetTemperatureIntent{
+				return service.ApplyIntent(context.Background(), SetTemperatureIntent{
 					Room:    "Living Room",
 					Preset:  TemperaturePresetCurrent,
 					Mode:    TemperatureModeCurrent,
@@ -154,7 +155,7 @@ func TestHVACServiceApplyIntentUsesExpectedResolvedIntents(t *testing.T) {
 		{
 			name: "set temperature explicit target",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.ApplyIntent(SetTemperatureIntent{
+				return service.ApplyIntent(context.Background(), SetTemperatureIntent{
 					Room:    "Living Room",
 					Preset:  TemperaturePresetEco,
 					Mode:    TemperatureModeCool,
@@ -200,7 +201,7 @@ func TestHVACServiceApplyIntentTemperatureResolvesTargets(t *testing.T) {
 		{
 			name: "set temperature current target becomes current setpoint change",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.ApplyIntent(SetTemperatureIntent{
+				return service.ApplyIntent(context.Background(), SetTemperatureIntent{
 					Room:    "Living Room",
 					Preset:  TemperaturePresetCurrent,
 					Mode:    TemperatureModeCurrent,
@@ -218,7 +219,7 @@ func TestHVACServiceApplyIntentTemperatureResolvesTargets(t *testing.T) {
 		{
 			name: "set temperature explicit target",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.ApplyIntent(SetTemperatureIntent{
+				return service.ApplyIntent(context.Background(), SetTemperatureIntent{
 					Room:    "Living Room",
 					Preset:  TemperaturePresetEco,
 					Mode:    TemperatureModeCool,
@@ -236,7 +237,7 @@ func TestHVACServiceApplyIntentTemperatureResolvesTargets(t *testing.T) {
 		{
 			name: "set temperature delta on resolved target",
 			act: func(service *HVACService) (*domain.HVACSystem, error) {
-				return service.ApplyIntent(SetTemperatureIntent{
+				return service.ApplyIntent(context.Background(), SetTemperatureIntent{
 					Room:    "Living Room",
 					Preset:  TemperaturePresetComfort,
 					Mode:    TemperatureModeHeat,

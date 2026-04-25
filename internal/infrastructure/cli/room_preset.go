@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jonatak/go-bailup/internal/application"
@@ -12,8 +13,8 @@ type RoomPreset struct {
 	RoomTarget
 }
 
-func (r *RoomPreset) Run(service *application.HVACService) error {
-	_, err := service.ApplyIntent(application.SetRoomPresetIntent{
+func (r *RoomPreset) Run(ctx context.Context, service *application.HVACService) error {
+	_, err := service.ApplyIntent(ctx, application.SetRoomPresetIntent{
 		Room:   r.Name,
 		Preset: r.Preset,
 	})

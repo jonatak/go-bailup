@@ -2,7 +2,9 @@ package bailup
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,9 +12,11 @@ import (
 	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/model"
 )
 
-func (b *Bailup) Execute(cmd command.JSONCommand) (*model.State, error) {
+var ErrDisconnected = errors.New("bailup disconnected")
+
+func (b *Bailup) Execute(ctx context.Context, cmd command.JSONCommand) (*model.State, error) {
 	if !b.IsConnected() {
-		return nil, NewBailupError("cannot fetch regulation state: client is not connected", nil)
+		return nil, NewBailupError("cannot fetch regulation state: client is not connected", ErrDisconnected)
 	}
 
 	payload, err := cmd.ToJSON()
@@ -20,7 +24,8 @@ func (b *Bailup) Execute(cmd command.JSONCommand) (*model.State, error) {
 		return nil, NewBailupError("cannot serialise command", err)
 	}
 
-	req, err := http.NewRequest(
+	req, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodPost,
 		fmt.Sprintf("%s/api-client/regulations/%s", bailupWebsite, b.regulation),
 		bytes.NewBuffer(payload),
@@ -42,14 +47,14 @@ func (b *Bailup) Execute(cmd command.JSONCommand) (*model.State, error) {
 
 	resp, err := b.client.Do(req)
 	if err != nil {
-		return nil, NewBailupError("could not fetch regulation state", err)
+		return nil, NewBailupError("could not fetch regulation state", errors.Join(err, ErrDisconnected))
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, NewBailupError(
 			fmt.Sprintf("could not fetch regulation state: unexpected status %d", resp.StatusCode),
-			nil,
+			ErrDisconnected,
 		)
 	}
 
@@ -62,6 +67,6 @@ func (b *Bailup) Execute(cmd command.JSONCommand) (*model.State, error) {
 	return &response.Data, nil
 }
 
-func (b *Bailup) GetState() (*model.State, error) {
-	return b.Execute(&command.EmptyCommand{})
+func (b *Bailup) GetState(ctx context.Context) (*model.State, error) {
+	return b.Execute(ctx, &command.EmptyCommand{})
 }

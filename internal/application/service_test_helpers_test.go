@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"testing"
 
 	"github.com/jonatak/go-bailup/internal/domain"
@@ -18,11 +19,11 @@ type fakeHVACSystemGateway struct {
 	appliedIntent    ResolvedIntent
 }
 
-func (f *fakeHVACSystemGateway) Connect() error {
+func (f *fakeHVACSystemGateway) Connect(context.Context) error {
 	return nil
 }
 
-func (f *fakeHVACSystemGateway) GetHVACSystemState() (*domain.HVACSystem, error) {
+func (f *fakeHVACSystemGateway) GetHVACSystemState(context.Context) (*domain.HVACSystem, error) {
 	f.getStateCalls++
 	if f.getStateErr != nil {
 		return nil, f.getStateErr
@@ -30,7 +31,7 @@ func (f *fakeHVACSystemGateway) GetHVACSystemState() (*domain.HVACSystem, error)
 	return f.state, nil
 }
 
-func (f *fakeHVACSystemGateway) ApplyResolvedIntent(intent ResolvedIntent) (*domain.HVACSystem, error) {
+func (f *fakeHVACSystemGateway) ApplyResolvedIntent(_ context.Context, intent ResolvedIntent) (*domain.HVACSystem, error) {
 	f.applyIntentCalls++
 	f.appliedIntent = intent
 	if f.applyIntentErr != nil {
