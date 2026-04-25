@@ -1,6 +1,7 @@
 package domain
 
 type Thermostat struct {
+	id          int
 	room        string
 	preset      ThermostatPreset
 	isOn        bool
@@ -10,6 +11,7 @@ type Thermostat struct {
 }
 
 func NewThermostat(
+	id int,
 	room string,
 	preset ThermostatPreset,
 	isOn bool,
@@ -18,6 +20,7 @@ func NewThermostat(
 	coolSetting TemperatureSettings,
 ) (Thermostat, error) {
 	thermostat := Thermostat{
+		id:          id,
 		room:        room,
 		preset:      preset,
 		isOn:        isOn,
@@ -47,6 +50,10 @@ func (t Thermostat) Validate() error {
 	}
 
 	return nil
+}
+
+func (t *Thermostat) ID() int {
+	return t.id
 }
 
 func (t *Thermostat) Room() string {

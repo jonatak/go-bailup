@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
@@ -16,8 +17,10 @@ func TestGatewayGetHVACSystemStateWrapsStateLoadError(t *testing.T) {
 	gateway := &Gateway{
 		client: NewBailup("", "", ""),
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
 
-	system, err := gateway.GetHVACSystemState(context.Background())
+	system, err := gateway.GetHVACSystemState(ctx)
 
 	require.Error(t, err)
 	assert.Nil(t, system)
@@ -53,8 +56,10 @@ func TestGatewayApplyResolvedIntentWrapsStateLoadError(t *testing.T) {
 	gateway := &Gateway{
 		client: NewBailup("", "", ""),
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
 
-	system, err := gateway.ApplyResolvedIntent(context.Background(), application.SetModeIntent{
+	system, err := gateway.ApplyResolvedIntent(ctx, application.SetModeIntent{
 		Mode: domain.HVACSystemModeCool,
 	})
 

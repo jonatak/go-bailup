@@ -57,8 +57,6 @@ func NewMQTTServer(
 		Port:       port,
 		ClientID:   clientId,
 		Prefix:     prefix,
-		ErrorChan:  errorChan,
-		IntentChan: intentChan,
 	}
 
 	handler, err := mqtt.NewMQTTHandler(params, state)

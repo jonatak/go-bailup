@@ -83,6 +83,7 @@ func thermostatFromModel(thermostat model.Thermostat) (domain.Thermostat, error)
 	}
 
 	return domain.NewThermostat(
+		thermostat.ID,
 		thermostat.Name,
 		domain.ThermostatPreset(thermostat.T1T2.String()),
 		thermostat.IsOn,

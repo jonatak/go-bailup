@@ -12,7 +12,7 @@ func TestNewThermostatRejectsInvalidPreset(t *testing.T) {
 	heat := mustTemperatureSettings(t, domain.HVACSystemModeHeat, 20, 18)
 	cool := mustTemperatureSettings(t, domain.HVACSystemModeCool, 24, 26)
 
-	thermostat, err := domain.NewThermostat("Living Room", domain.ThermostatPreset("away"), true, false, heat, cool)
+	thermostat, err := domain.NewThermostat(1, "Living Room", domain.ThermostatPreset("away"), true, false, heat, cool)
 
 	require.ErrorIs(t, err, domain.ErrInvalidPresetMode)
 	assert.Equal(t, domain.Thermostat{}, thermostat)
@@ -21,7 +21,7 @@ func TestNewThermostatRejectsInvalidPreset(t *testing.T) {
 func TestNewThermostatRejectsInvalidTemperatureSettings(t *testing.T) {
 	cool := mustTemperatureSettings(t, domain.HVACSystemModeCool, 24, 26)
 
-	thermostat, err := domain.NewThermostat("Living Room", domain.PresetComfort, true, false, domain.TemperatureSettings{}, cool)
+	thermostat, err := domain.NewThermostat(1, "Living Room", domain.PresetComfort, true, false, domain.TemperatureSettings{}, cool)
 
 	require.ErrorIs(t, err, domain.ErrSetpointUnsupportedForMode)
 	assert.Equal(t, domain.Thermostat{}, thermostat)
@@ -52,7 +52,7 @@ func mustThermostat(t *testing.T, room string, preset domain.ThermostatPreset) d
 
 	heat := mustTemperatureSettings(t, domain.HVACSystemModeHeat, 20, 18)
 	cool := mustTemperatureSettings(t, domain.HVACSystemModeCool, 24, 26)
-	thermostat, err := domain.NewThermostat(room, preset, true, false, heat, cool)
+	thermostat, err := domain.NewThermostat(1, room, preset, true, false, heat, cool)
 	require.NoError(t, err)
 
 	return thermostat

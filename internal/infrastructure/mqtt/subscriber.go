@@ -11,9 +11,10 @@ import (
 )
 
 type subscription struct {
-	room       string
-	intentChan chan<- application.Intent
-	errorChan  chan<- error
+	thermostatID int
+	room         string
+	intentChan   chan<- application.Intent
+	errorChan    chan<- error
 }
 
 func (s *subscription) setMode(_ mqtt.Client, msg mqtt.Message) {

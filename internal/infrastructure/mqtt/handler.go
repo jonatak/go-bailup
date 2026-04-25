@@ -75,9 +75,10 @@ func (m *Handler) registerSubscription(system *domain.HVACSystem, intentChan cha
 	for _, t := range th {
 		roomName := strings.ToLower(t.Room())
 		subscriber = append(subscriber, &subscription{
-			room:       roomName,
-			intentChan: intentChan,
-			errorChan:  m.errorChan,
+			thermostatID: t.ID(),
+			room:         roomName,
+			intentChan:   intentChan,
+			errorChan:    m.errorChan,
 		})
 	}
 	m.subscriptions = subscriber
@@ -93,13 +94,13 @@ func (m *Handler) subscribe() error {
 				return token.Error()
 			}
 		default:
-			if token := m.client.Subscribe(fmt.Sprintf("%s/%s/preset_mode/set", m.prefix, s.room), byte(0), s.setPreset); token.Wait() && token.Error() != nil {
+			if token := m.client.Subscribe(fmt.Sprintf("%s/th_%d/preset_mode/set", m.prefix, s.thermostatID), byte(0), s.setPreset); token.Wait() && token.Error() != nil {
 				return token.Error()
 			}
-			if token := m.client.Subscribe(fmt.Sprintf("%s/%s/mode/set", m.prefix, s.room), byte(0), s.turnOnOff); token.Wait() && token.Error() != nil {
+			if token := m.client.Subscribe(fmt.Sprintf("%s/th_%d/mode/set", m.prefix, s.thermostatID), byte(0), s.turnOnOff); token.Wait() && token.Error() != nil {
 				return token.Error()
 			}
-			if token := m.client.Subscribe(fmt.Sprintf("%s/%s/temperature/set", m.prefix, s.room), byte(0), s.setTemperature); token.Wait() && token.Error() != nil {
+			if token := m.client.Subscribe(fmt.Sprintf("%s/th_%d/temperature/set", m.prefix, s.thermostatID), byte(0), s.setTemperature); token.Wait() && token.Error() != nil {
 				return token.Error()
 			}
 		}

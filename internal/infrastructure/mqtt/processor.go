@@ -8,7 +8,26 @@ import (
 	"time"
 
 	"github.com/jonatak/go-bailup/internal/application"
+	"github.com/jonatak/go-bailup/internal/domain"
 )
+
+type job interface {
+	isJob()
+}
+
+type intentJob struct {
+	intent application.Intent
+}
+
+type refreshJob struct{}
+
+func (intentJob) isJob()  {}
+func (refreshJob) isJob() {}
+
+type result struct {
+	state *domain.HVACSystem
+	err   error
+}
 
 type Processor struct {
 	service       *application.HVACService
@@ -28,6 +47,12 @@ func NewProcessor(handler *Handler, service *application.HVACService) *Processor
 func (p *Processor) Run(ctx context.Context) error {
 	defer p.handler.Close()
 	timer := time.NewTimer(refreshInterval)
+	jobCh := make(chan job, 10)
+	resultCh := make(chan result)
+	defer close(jobCh)
+
+	go p.StartWorker(ctx, jobCh, resultCh)
+
 	defer timer.Stop()
 	for {
 
@@ -41,10 +66,24 @@ func (p *Processor) Run(ctx context.Context) error {
 			return ctx.Err()
 		case err := <-p.handler.Errors():
 			p.handleError(err)
+		case res := <-resultCh:
+			if res.err != nil {
+				slog.Error(res.err.Error())
+				continue
+			}
+			fmt.Println(res.state)
 		case intent := <-p.handler.Intents():
-			p.handleIntent(ctx, intent)
+			if len(jobCh) == cap(jobCh) {
+				slog.Info("mqtt command dropped, worker queue is full")
+				continue
+			}
+			jobCh <- intentJob{
+				intent: intent,
+			}
 		case <-timer.C:
-			p.refreshState(ctx)
+			if len(jobCh) == 0 {
+				jobCh <- refreshJob{}
+			}
 		}
 		timer.Reset(refreshInterval)
 	}
@@ -79,24 +118,41 @@ func (p *Processor) ensureMQTTConnected(ctx context.Context) error {
 	return nil
 }
 
-func (p *Processor) handleIntent(ctx context.Context, intent application.Intent) {
+func (p *Processor) handleIntent(ctx context.Context, intent application.Intent) result {
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
 	s, err := p.service.ApplyIntent(ctxWithTimeout, intent)
 	cancel()
 	if err != nil {
-		slog.Error("apply intent failed", "intent", fmt.Sprintf("%T", intent), "err", err)
-		return
+		return result{
+			err: fmt.Errorf("apply intent failed, intent: %T, error: %w", intent, err),
+		}
 	}
-	fmt.Println(s)
+	return result{
+		state: s,
+	}
 }
 
-func (p *Processor) refreshState(ctx context.Context) {
+func (p *Processor) refreshState(ctx context.Context) result {
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
 	s, err := p.service.CurrentState(ctxWithTimeout)
 	cancel()
 	if err != nil {
-		slog.Error("state refresh failed", "err", err)
-		return
+		return result{
+			err: fmt.Errorf("refresh state failed error: %w", err),
+		}
 	}
-	fmt.Println(s)
+	return result{
+		state: s,
+	}
+}
+
+func (p *Processor) StartWorker(ctx context.Context, jobs <-chan job, results chan<- result) {
+	for j := range jobs {
+		switch j := j.(type) {
+		case intentJob:
+			results <- p.handleIntent(ctx, j.intent)
+		case refreshJob:
+			results <- p.refreshState(ctx)
+		}
+	}
 }

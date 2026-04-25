@@ -48,6 +48,7 @@ func testHVACSystem(t *testing.T, mode domain.HVACSystemMode) *domain.HVACSystem
 	coolSetting, err := domain.NewTemperatureSettings(domain.HVACSystemModeCool, 24, 26)
 	require.NoError(t, err)
 	thermostat, err := domain.NewThermostat(
+		1,
 		"Living Room",
 		domain.PresetComfort,
 		false,

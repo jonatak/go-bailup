@@ -66,6 +66,7 @@ func testFormatThermostat(
 	coolSetting, err := domain.NewTemperatureSettings(domain.HVACSystemModeCool, 24, 26)
 	require.NoError(t, err)
 	thermostat, err := domain.NewThermostat(
+		1,
 		room,
 		preset,
 		isOn,
