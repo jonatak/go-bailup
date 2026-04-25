@@ -1,6 +1,7 @@
 package bailup
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,8 +12,18 @@ import (
 	"golang.org/x/net/html"
 )
 
-func (b *Bailup) Connect() error {
-	resp, err := b.client.Get(fmt.Sprintf("%s/client/connexion", bailupWebsite))
+func (b *Bailup) Connect(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("%s/client/connexion", bailupWebsite),
+		nil,
+	)
+	if err != nil {
+		return NewBailupError("could not build login page request", err)
+	}
+
+	resp, err := b.client.Do(req)
 	if err != nil {
 		return NewBailupError("could not load login page", err)
 	}
@@ -44,14 +55,14 @@ func (b *Bailup) Connect() error {
 	}
 
 	b.csrf = csrf
-	if err := b.login(token); err != nil {
+	if err := b.login(ctx, token); err != nil {
 		return NewBailupError("could not establish authenticated session", err)
 	}
 
 	return nil
 }
 
-func (b *Bailup) login(token string) error {
+func (b *Bailup) login(ctx context.Context, token string) error {
 	if token == "" {
 		return errors.New("login form token was empty")
 	}
@@ -61,11 +72,18 @@ func (b *Bailup) login(token string) error {
 	form.Set("password", b.password)
 	form.Set("_token", token)
 
-	resp, err := b.client.Post(
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
 		fmt.Sprintf("%s/client/connexion", bailupWebsite),
-		"application/x-www-form-urlencoded",
 		strings.NewReader(form.Encode()),
 	)
+	if err != nil {
+		return NewBailupError("could not build login form request", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := b.client.Do(req)
 	if err != nil {
 		return NewBailupError("could not submit login form", err)
 	}

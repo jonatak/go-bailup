@@ -3,6 +3,7 @@ package bailup
 import (
 	"fmt"
 
+	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
 	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/command"
 	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/model"
@@ -28,25 +29,25 @@ func HVACSystemFromState(state *model.State) (*domain.HVACSystem, error) {
 	)
 }
 
-func CommandFromChange(state *model.State, change domain.Change) (command.JSONCommand, error) {
+func CommandFromResolvedIntent(state *model.State, intent application.ResolvedIntent) (command.JSONCommand, error) {
 	if state == nil {
 		return nil, fmt.Errorf("state is nil")
 	}
-	if change == nil {
-		return nil, fmt.Errorf("change is nil")
+	if intent == nil {
+		return nil, fmt.Errorf("intent is nil")
 	}
 
-	switch c := change.(type) {
-	case domain.HVACModeChanged:
-		return command.NewHVACModeCommand(string(c.Mode))
-	case domain.RoomPresetChanged:
-		return command.NewPresetCommand(state, c.Room, string(c.Preset))
-	case domain.RoomPowerChanged:
-		return command.NewRoomPowerCommand(state, c.Room, c.On)
-	case domain.TemperatureChanged:
-		return temperatureCommandFromChange(state, c)
+	switch i := intent.(type) {
+	case application.SetModeIntent:
+		return command.NewHVACModeCommand(string(i.Mode))
+	case application.SetRoomPresetIntent:
+		return command.NewPresetCommand(state, i.Room, string(i.Preset))
+	case application.SetRoomPowerIntent:
+		return command.NewRoomPowerCommand(state, i.Room, i.On)
+	case application.ResolvedSetTemperatureIntent:
+		return temperatureCommandFromIntent(state, i)
 	default:
-		return nil, fmt.Errorf("unsupported domain change kind %q", change.Kind())
+		return nil, fmt.Errorf("unsupported resolved intent type %T", intent)
 	}
 }
 
@@ -82,7 +83,9 @@ func thermostatFromModel(thermostat model.Thermostat) (domain.Thermostat, error)
 	}
 
 	return domain.NewThermostat(
+		thermostat.ID,
 		thermostat.Name,
+		thermostat.Temperature,
 		domain.ThermostatPreset(thermostat.T1T2.String()),
 		thermostat.IsOn,
 		thermostat.MotorState > 4,
@@ -91,29 +94,29 @@ func thermostatFromModel(thermostat model.Thermostat) (domain.Thermostat, error)
 	)
 }
 
-func temperatureCommandFromChange(
+func temperatureCommandFromIntent(
 	state *model.State,
-	change domain.TemperatureChanged,
+	intent application.ResolvedSetTemperatureIntent,
 ) (command.JSONCommand, error) {
-	thermostat := state.GetThermostatByName(change.Room)
+	thermostat := state.GetThermostatByName(intent.Room)
 	if thermostat == nil {
-		return nil, fmt.Errorf("map temperature change for room %q: thermostat not found", change.Room)
+		return nil, fmt.Errorf("map temperature intent for room %q: thermostat not found", intent.Room)
 	}
 
-	ucMode, err := model.UCModeFromString(string(change.Mode))
+	ucMode, err := model.UCModeFromString(string(intent.Mode))
 	if err != nil {
-		return nil, fmt.Errorf("map temperature change for room %q: invalid HVAC mode %q: %w",
-			change.Room,
-			change.Mode,
+		return nil, fmt.Errorf("map temperature intent for room %q: invalid HVAC mode %q: %w",
+			intent.Room,
+			intent.Mode,
 			err,
 		)
 	}
 
-	thMode, err := model.ThModeFromString(string(change.Preset))
+	thMode, err := model.ThModeFromString(string(intent.Preset))
 	if err != nil {
-		return nil, fmt.Errorf("map temperature change for room %q: invalid preset %q: %w",
-			change.Room,
-			change.Preset,
+		return nil, fmt.Errorf("map temperature intent for room %q: invalid preset %q: %w",
+			intent.Room,
+			intent.Preset,
 			err,
 		)
 	}
@@ -122,6 +125,6 @@ func temperatureCommandFromChange(
 		ThermostatID: thermostat.ID,
 		UCMode:       ucMode,
 		ThMode:       thMode,
-		Value:        change.Value,
+		Value:        intent.Value,
 	}, nil
 }

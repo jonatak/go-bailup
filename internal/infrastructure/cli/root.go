@@ -6,5 +6,6 @@ type CLI struct {
 	Status     Status                    `cmd:"" help:"Show Thermostats status"`
 	HVACMode   HVACMode                  `cmd:"" help:"Set HVAC mode"`
 	Room       Room                      `cmd:"" help:"Manage rooms"`
+	Serve      Server                    `cmd:"" help:"Start mqtt server"`
 	Completion kongcompletion.Completion `cmd:"" help:"Outputs shell code for initialising tab completions"`
 }

@@ -1,8 +1,10 @@
 package bailup
 
 import (
+	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
@@ -15,8 +17,10 @@ func TestGatewayGetHVACSystemStateWrapsStateLoadError(t *testing.T) {
 	gateway := &Gateway{
 		client: NewBailup("", "", ""),
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
 
-	system, err := gateway.GetHVACSystemState()
+	system, err := gateway.GetHVACSystemState(ctx)
 
 	require.Error(t, err)
 	assert.Nil(t, system)
@@ -40,7 +44,7 @@ func TestGatewayGetHVACSystemStateWrapsStateMappingError(t *testing.T) {
 		},
 	}
 
-	system, err := gateway.GetHVACSystemState()
+	system, err := gateway.GetHVACSystemState(context.Background())
 
 	require.Error(t, err)
 	assert.Nil(t, system)
@@ -48,12 +52,14 @@ func TestGatewayGetHVACSystemStateWrapsStateMappingError(t *testing.T) {
 	assert.True(t, errors.Is(err, domain.ErrComfortMustBeBiggerThanEco))
 }
 
-func TestGatewayApplyChangeWrapsStateLoadError(t *testing.T) {
+func TestGatewayApplyResolvedIntentWrapsStateLoadError(t *testing.T) {
 	gateway := &Gateway{
 		client: NewBailup("", "", ""),
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
 
-	system, err := gateway.ApplyChange(domain.HVACModeChanged{
+	system, err := gateway.ApplyResolvedIntent(ctx, application.SetModeIntent{
 		Mode: domain.HVACSystemModeCool,
 	})
 
@@ -62,12 +68,12 @@ func TestGatewayApplyChangeWrapsStateLoadError(t *testing.T) {
 	assert.True(t, errors.Is(err, application.ErrStateUnavailable))
 }
 
-func TestGatewayApplyChangeWrapsChangeMappingError(t *testing.T) {
+func TestGatewayApplyResolvedIntentWrapsIntentMappingError(t *testing.T) {
 	gateway := &Gateway{
 		state: mapperTestState(),
 	}
 
-	system, err := gateway.ApplyChange(domain.RoomPowerChanged{
+	system, err := gateway.ApplyResolvedIntent(context.Background(), application.SetRoomPowerIntent{
 		Room: "Kitchen",
 		On:   true,
 	})

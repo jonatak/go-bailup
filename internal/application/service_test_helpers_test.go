@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"testing"
 
 	"github.com/jonatak/go-bailup/internal/domain"
@@ -11,18 +12,18 @@ type fakeHVACSystemGateway struct {
 	state          *domain.HVACSystem
 	updatedState   *domain.HVACSystem
 	getStateErr    error
-	applyChangeErr error
+	applyIntentErr error
 
 	getStateCalls    int
-	applyChangeCalls int
-	appliedChange    domain.Change
+	applyIntentCalls int
+	appliedIntent    ResolvedIntent
 }
 
-func (f *fakeHVACSystemGateway) Connect() error {
+func (f *fakeHVACSystemGateway) Connect(context.Context) error {
 	return nil
 }
 
-func (f *fakeHVACSystemGateway) GetHVACSystemState() (*domain.HVACSystem, error) {
+func (f *fakeHVACSystemGateway) GetHVACSystemState(context.Context) (*domain.HVACSystem, error) {
 	f.getStateCalls++
 	if f.getStateErr != nil {
 		return nil, f.getStateErr
@@ -30,11 +31,11 @@ func (f *fakeHVACSystemGateway) GetHVACSystemState() (*domain.HVACSystem, error)
 	return f.state, nil
 }
 
-func (f *fakeHVACSystemGateway) ApplyChange(change domain.Change) (*domain.HVACSystem, error) {
-	f.applyChangeCalls++
-	f.appliedChange = change
-	if f.applyChangeErr != nil {
-		return nil, f.applyChangeErr
+func (f *fakeHVACSystemGateway) ApplyResolvedIntent(_ context.Context, intent ResolvedIntent) (*domain.HVACSystem, error) {
+	f.applyIntentCalls++
+	f.appliedIntent = intent
+	if f.applyIntentErr != nil {
+		return nil, f.applyIntentErr
 	}
 	return f.updatedState, nil
 }
@@ -47,7 +48,9 @@ func testHVACSystem(t *testing.T, mode domain.HVACSystemMode) *domain.HVACSystem
 	coolSetting, err := domain.NewTemperatureSettings(domain.HVACSystemModeCool, 24, 26)
 	require.NoError(t, err)
 	thermostat, err := domain.NewThermostat(
+		1,
 		"Living Room",
+		20.0,
 		domain.PresetComfort,
 		false,
 		false,

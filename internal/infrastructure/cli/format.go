@@ -41,6 +41,7 @@ func formatThermostat(number int, thermostat domain.Thermostat) string {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "#%d %s\n", number, thermostat.Room())
+	fmt.Fprintf(&b, "  Temperature: %.1f C\n", thermostat.Temperature())
 	fmt.Fprintf(&b, "  Status: %s, running=%t\n", formatPowerStatus(thermostat.IsOn()), thermostat.IsRunning())
 	fmt.Fprintf(&b, "  Active preset: %s\n", highlight(string(thermostat.Preset()), ansiGreen))
 	fmt.Fprintf(&b, "%s", formatTemperatureSettings(thermostat))

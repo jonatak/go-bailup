@@ -42,47 +42,38 @@ func (s *HVACSystem) Thermostats() []Thermostat {
 	return append([]Thermostat(nil), s.thermostats...)
 }
 
-func (s *HVACSystem) SetMode(mode HVACSystemMode) (Change, error) {
+func (s *HVACSystem) SetMode(mode HVACSystemMode) error {
 	if err := mode.Validate(); err != nil {
-		return nil, err
+		return err
 	}
 	s.mode = mode
-	return HVACModeChanged{Mode: mode}, nil
+	return nil
 }
 
-func (s *HVACSystem) SetRoomPreset(room string, preset ThermostatPreset) (Change, error) {
+func (s *HVACSystem) SetRoomPreset(room string, preset ThermostatPreset) error {
 	th, err := s.findThermostat(room)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err = th.setPreset(preset); err != nil {
-		return nil, err
+		return err
 	}
-	return RoomPresetChanged{Room: room, Preset: preset}, nil
+	return nil
 }
 
-func (s *HVACSystem) TurnRoomOn(room string) (Change, error) {
+func (s *HVACSystem) SetRoomPower(room string, on bool) error {
 	th, err := s.findThermostat(room)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	th.turnOn()
-	return RoomPowerChanged{
-		Room: room,
-		On:   true,
-	}, nil
-}
 
-func (s *HVACSystem) TurnRoomOff(room string) (Change, error) {
-	th, err := s.findThermostat(room)
-	if err != nil {
-		return nil, err
+	if on {
+		th.turnOn()
+	} else {
+		th.turnOff()
 	}
-	th.turnOff()
-	return RoomPowerChanged{
-		Room: room,
-		On:   false,
-	}, nil
+
+	return nil
 }
 
 func (m HVACSystemMode) SupportsSetpoint() bool {
@@ -137,39 +128,16 @@ func (s *HVACSystem) Setpoint(
 	return th.setpointFor(mode, preset)
 }
 
-func (s *HVACSystem) SetTemperature(room string, mode HVACSystemMode, preset ThermostatPreset, temp float64) (Change, error) {
+func (s *HVACSystem) SetTemperature(room string, mode HVACSystemMode, preset ThermostatPreset, temp float64) error {
 	th, err := s.findThermostat(room)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err = th.setTemperature(mode, preset, temp); err != nil {
-		return nil, err
+		return err
 	}
-	return TemperatureChanged{
-		Room:   room,
-		Mode:   mode,
-		Preset: preset,
-		Value:  temp,
-	}, nil
-}
-
-func (s *HVACSystem) SetCurrentSetpoint(room string, temp float64) (Change, error) {
-	th, err := s.findThermostat(room)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if err = th.setTemperature(s.mode, th.preset, temp); err != nil {
-		return nil, err
-	}
-	return TemperatureChanged{
-		Room:   room,
-		Mode:   s.mode,
-		Preset: th.preset,
-		Value:  temp,
-	}, nil
+	return nil
 }
 
 func (s *HVACSystem) findThermostat(room string) (*Thermostat, error) {

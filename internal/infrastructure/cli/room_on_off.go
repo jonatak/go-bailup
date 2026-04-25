@@ -1,9 +1,10 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/jonatak/go-bailup/internal/app"
+	"github.com/jonatak/go-bailup/internal/application"
 )
 
 type RoomOn struct {
@@ -14,8 +15,11 @@ type RoomOff struct {
 	RoomTarget
 }
 
-func (o *RoomOn) Run(appCtx *app.AppContext) error {
-	_, err := appCtx.HVACService.TurnRoomOn(o.Name)
+func (o *RoomOn) Run(ctx context.Context, service *application.HVACService) error {
+	_, err := service.ApplyIntent(ctx, application.SetRoomPowerIntent{
+		Room: o.Name,
+		On:   true,
+	})
 	if err != nil {
 		return err
 	}
@@ -24,8 +28,11 @@ func (o *RoomOn) Run(appCtx *app.AppContext) error {
 	return nil
 }
 
-func (o *RoomOff) Run(appCtx *app.AppContext) error {
-	_, err := appCtx.HVACService.TurnRoomOff(o.Name)
+func (o *RoomOff) Run(ctx context.Context, service *application.HVACService) error {
+	_, err := service.ApplyIntent(ctx, application.SetRoomPowerIntent{
+		Room: o.Name,
+		On:   false,
+	})
 	if err != nil {
 		return err
 	}

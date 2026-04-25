@@ -1,6 +1,13 @@
 package application
 
-import "github.com/jonatak/go-bailup/internal/domain"
+import (
+	"context"
+	"fmt"
+
+	"github.com/jonatak/go-bailup/internal/domain"
+)
+
+type intentFunc = func(system *domain.HVACSystem) (ResolvedIntent, error)
 
 type HVACService struct {
 	gateway HVACSystemGateway
@@ -12,101 +19,42 @@ func NewHVACService(gateway HVACSystemGateway) *HVACService {
 	}
 }
 
-func (s *HVACService) CurrentState() (*domain.HVACSystem, error) {
-	return s.gateway.GetHVACSystemState()
+func (s *HVACService) CurrentState(ctx context.Context) (*domain.HVACSystem, error) {
+	return s.gateway.GetHVACSystemState(ctx)
 }
 
-func (s *HVACService) SetMode(mode domain.HVACSystemMode) (*domain.HVACSystem, error) {
-	system, err := s.gateway.GetHVACSystemState()
-	if err != nil {
-		return nil, err
-	}
+func (s *HVACService) ApplyIntent(ctx context.Context, intent Intent) (*domain.HVACSystem, error) {
+	return s.executeIntent(ctx, func(system *domain.HVACSystem) (ResolvedIntent, error) {
+		switch i := intent.(type) {
+		case SetModeIntent:
+			return i, system.SetMode(i.Mode)
+		case SetRoomPresetIntent:
+			return i, system.SetRoomPreset(i.Room, i.Preset)
+		case SetRoomPowerIntent:
+			return i, system.SetRoomPower(i.Room, i.On)
+		case SetTemperatureIntent:
+			resolved, err := resolveTemperatureTarget(system, i)
+			if err != nil {
+				return nil, err
+			}
 
-	change, err := system.SetMode(mode)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.gateway.ApplyChange(change)
+			return resolved.Intent(), system.SetTemperature(resolved.room, resolved.mode, resolved.preset, resolved.value)
+		default:
+			return nil, fmt.Errorf("unsupported intent type %T", intent)
+		}
+	})
 }
 
-func (s *HVACService) SetRoomPreset(
-	room string,
-	preset domain.ThermostatPreset,
-) (*domain.HVACSystem, error) {
-	system, err := s.gateway.GetHVACSystemState()
+func (s *HVACService) executeIntent(ctx context.Context, action intentFunc) (*domain.HVACSystem, error) {
+	system, err := s.gateway.GetHVACSystemState(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	change, err := system.SetRoomPreset(room, preset)
+	intent, err := action(system)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.gateway.ApplyChange(change)
-}
-
-func (s *HVACService) TurnRoomOn(room string) (*domain.HVACSystem, error) {
-	system, err := s.gateway.GetHVACSystemState()
-	if err != nil {
-		return nil, err
-	}
-
-	change, err := system.TurnRoomOn(room)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.gateway.ApplyChange(change)
-}
-
-func (s *HVACService) TurnRoomOff(room string) (*domain.HVACSystem, error) {
-	system, err := s.gateway.GetHVACSystemState()
-	if err != nil {
-		return nil, err
-	}
-
-	change, err := system.TurnRoomOff(room)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.gateway.ApplyChange(change)
-}
-
-func (s *HVACService) SetCurrentSetpoint(
-	room string,
-	temp float64,
-) (*domain.HVACSystem, error) {
-	system, err := s.gateway.GetHVACSystemState()
-	if err != nil {
-		return nil, err
-	}
-
-	change, err := system.SetCurrentSetpoint(room, temp)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.gateway.ApplyChange(change)
-}
-
-func (s *HVACService) SetTemperature(
-	room string,
-	mode domain.HVACSystemMode,
-	preset domain.ThermostatPreset,
-	temp float64,
-) (*domain.HVACSystem, error) {
-	system, err := s.gateway.GetHVACSystemState()
-	if err != nil {
-		return nil, err
-	}
-
-	change, err := system.SetTemperature(room, mode, preset, temp)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.gateway.ApplyChange(change)
+	return s.gateway.ApplyResolvedIntent(ctx, intent)
 }

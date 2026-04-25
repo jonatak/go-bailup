@@ -3,6 +3,7 @@ package bailup
 import (
 	"testing"
 
+	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/domain"
 	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/command"
 	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/model"
@@ -21,7 +22,9 @@ func TestHVACSystemFromState(t *testing.T) {
 	thermostats := system.Thermostats()
 	require.Len(t, thermostats, 2)
 
+	assert.Equal(t, 9152, thermostats[0].ID())
 	assert.Equal(t, "Living Room", thermostats[0].Room())
+	assert.Equal(t, 20.4, thermostats[0].Temperature())
 	assert.Equal(t, domain.PresetComfort, thermostats[0].Preset())
 	assert.True(t, thermostats[0].IsOn())
 	assert.False(t, thermostats[0].IsRunning())
@@ -30,7 +33,9 @@ func TestHVACSystemFromState(t *testing.T) {
 	assert.Equal(t, 24.0, thermostats[0].CoolSetting().Comfort())
 	assert.Equal(t, 26.0, thermostats[0].CoolSetting().Eco())
 
+	assert.Equal(t, 9154, thermostats[1].ID())
 	assert.Equal(t, "Bedroom", thermostats[1].Room())
+	assert.Equal(t, 19.2, thermostats[1].Temperature())
 	assert.Equal(t, domain.PresetEco, thermostats[1].Preset())
 	assert.False(t, thermostats[1].IsOn())
 	assert.True(t, thermostats[1].IsRunning())
@@ -44,8 +49,8 @@ func TestHVACSystemFromStateRejectsNilState(t *testing.T) {
 	assert.Contains(t, err.Error(), "state is nil")
 }
 
-func TestCommandFromHVACModeChanged(t *testing.T) {
-	cmd, err := CommandFromChange(mapperTestState(), domain.HVACModeChanged{
+func TestCommandFromSetModeIntent(t *testing.T) {
+	cmd, err := CommandFromResolvedIntent(mapperTestState(), application.SetModeIntent{
 		Mode: domain.HVACSystemModeCool,
 	})
 
@@ -55,8 +60,8 @@ func TestCommandFromHVACModeChanged(t *testing.T) {
 	}, cmd)
 }
 
-func TestCommandFromRoomPresetChanged(t *testing.T) {
-	cmd, err := CommandFromChange(mapperTestState(), domain.RoomPresetChanged{
+func TestCommandFromSetRoomPresetIntent(t *testing.T) {
+	cmd, err := CommandFromResolvedIntent(mapperTestState(), application.SetRoomPresetIntent{
 		Room:   "living room",
 		Preset: domain.PresetEco,
 	})
@@ -68,8 +73,8 @@ func TestCommandFromRoomPresetChanged(t *testing.T) {
 	}, cmd)
 }
 
-func TestCommandFromRoomPowerChanged(t *testing.T) {
-	cmd, err := CommandFromChange(mapperTestState(), domain.RoomPowerChanged{
+func TestCommandFromSetRoomPowerIntent(t *testing.T) {
+	cmd, err := CommandFromResolvedIntent(mapperTestState(), application.SetRoomPowerIntent{
 		Room: "bedroom",
 		On:   true,
 	})
@@ -81,8 +86,8 @@ func TestCommandFromRoomPowerChanged(t *testing.T) {
 	}, cmd)
 }
 
-func TestCommandFromTemperatureChanged(t *testing.T) {
-	cmd, err := CommandFromChange(mapperTestState(), domain.TemperatureChanged{
+func TestCommandFromResolvedSetTemperatureIntent(t *testing.T) {
+	cmd, err := CommandFromResolvedIntent(mapperTestState(), application.ResolvedSetTemperatureIntent{
 		Room:   "living room",
 		Mode:   domain.HVACSystemModeCool,
 		Preset: domain.PresetEco,
@@ -98,8 +103,8 @@ func TestCommandFromTemperatureChanged(t *testing.T) {
 	}, cmd)
 }
 
-func TestCommandFromChangeRejectsNilState(t *testing.T) {
-	cmd, err := CommandFromChange(nil, domain.HVACModeChanged{
+func TestCommandFromResolvedIntentRejectsNilState(t *testing.T) {
+	cmd, err := CommandFromResolvedIntent(nil, application.SetModeIntent{
 		Mode: domain.HVACSystemModeCool,
 	})
 
@@ -108,16 +113,16 @@ func TestCommandFromChangeRejectsNilState(t *testing.T) {
 	assert.Contains(t, err.Error(), "state is nil")
 }
 
-func TestCommandFromChangeRejectsNilChange(t *testing.T) {
-	cmd, err := CommandFromChange(mapperTestState(), nil)
+func TestCommandFromResolvedIntentRejectsNilIntent(t *testing.T) {
+	cmd, err := CommandFromResolvedIntent(mapperTestState(), nil)
 
 	require.Error(t, err)
 	assert.Nil(t, cmd)
-	assert.Contains(t, err.Error(), "change is nil")
+	assert.Contains(t, err.Error(), "intent is nil")
 }
 
-func TestCommandFromTemperatureChangedRejectsUnknownRoom(t *testing.T) {
-	cmd, err := CommandFromChange(mapperTestState(), domain.TemperatureChanged{
+func TestCommandFromResolvedSetTemperatureIntentRejectsUnknownRoom(t *testing.T) {
+	cmd, err := CommandFromResolvedIntent(mapperTestState(), application.ResolvedSetTemperatureIntent{
 		Room:   "kitchen",
 		Mode:   domain.HVACSystemModeCool,
 		Preset: domain.PresetEco,
