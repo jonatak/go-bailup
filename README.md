@@ -1,12 +1,12 @@
 # Go-Bailup
 
-Go-Bailup is a small Go CLI for controlling Bailup / Baillconnect thermostats from the terminal.
+Go-Bailup is a small Go application for controlling Bailup / Baillconnect thermostats from the terminal and from Home Assistant over MQTT.
 
 The project logs into the Baillconnect web interface, keeps the authenticated session in a cookie jar, reads the current regulation state, and sends command payloads for HVAC mode, room power, presets, and temperature setpoints.
 
 ## Status
 
-This is an early-stage personal project, but the main CLI flow is already usable:
+This is a personal project, but the main flows are now usable:
 
 - Fetch and display current thermostat state.
 - Change global HVAC mode.
@@ -14,6 +14,7 @@ This is an early-stage personal project, but the main CLI flow is already usable
 - Turn a room thermostat on or off.
 - Switch a room between `eco` and `comfort`.
 - Set, increase, or decrease room temperature setpoints.
+- Run an MQTT/Home Assistant bridge with discovery, command handling, and state publishing.
 - Generate shell completion scripts.
 
 ## Install
@@ -40,12 +41,23 @@ make install
 
 ## Configuration
 
-The CLI reads credentials and regulation id from environment variables:
+The application reads Bailup credentials and regulation id from environment variables:
 
 ```sh
 export BAILUP_EMAIL="you@example.com"
 export BAILUP_PASS="your-password"
 export BAILUP_REGULATION="your-regulation-id"
+```
+
+For MQTT / Home Assistant mode, also set:
+
+```sh
+export MQTT_HOST="mqtt.example.local"
+export MQTT_PORT="1883"
+export MQTT_USERNAME="mqtt-user"
+export MQTT_PASSWORD="mqtt-password"
+export MQTT_TOPIC_PREFIX="custom_bailup"
+export MQTT_CLIENT_ID="go-bailup"
 ```
 
 If you use `direnv`, put them in `.envrc` locally. Do not commit real credentials.
@@ -110,6 +122,19 @@ bailup room temp up "Living Room" --by 1 --preset eco --mode cool
 
 `--preset current` and `--mode current` are the defaults. Use explicit values when the current HVAC mode is not enough to identify the setpoint you want to modify.
 
+Run the MQTT / Home Assistant bridge:
+
+```sh
+bailup serve
+```
+
+The bridge:
+
+- subscribes to command topics under `MQTT_TOPIC_PREFIX`
+- publishes Home Assistant MQTT discovery payloads
+- publishes thermostat and general state
+- retries MQTT and Bailup connections when they drop
+
 ## Completion
 
 Generate shell completion code with:
@@ -134,7 +159,7 @@ The project is split into a few focused packages:
 - `internal/infrastructure/bailup/command`: JSON payload types sent to Baillconnect.
 - `internal/infrastructure/bailup/model`: Baillconnect API DTOs and mode conversions.
 
-The main flow is:
+The main flows are:
 
 ```text
 CLI / MQTT message
@@ -153,6 +178,18 @@ Temperature requests use a two-step model in `application`:
 - `ResolvedIntent`: gateway-ready operations with fully resolved domain values.
 
 That keeps request interpretation in the application layer and keeps the Bailup adapter focused on vendor-specific command mapping.
+
+The MQTT runtime is split into:
+
+- `Handler`: MQTT transport, topic registration, discovery publish, and state publish.
+- `Processor`: reconnect loop, worker loop, periodic refresh, and application service calls.
+
+Home Assistant discovery uses:
+
+- `homeassistant/climate/general/config`
+- `homeassistant/climate/th_<id>/config`
+
+Command and state topics use the configured `MQTT_TOPIC_PREFIX` and stable thermostat IDs such as `th_9152`.
 
 ## Development
 
@@ -176,11 +213,54 @@ make build
 ./bin/bailup status
 ```
 
-## Roadmap
+Run the MQTT bridge locally:
 
-- [ ] Finish the MQTT / Home Assistant processor loop and state publishing.
-- [ ] Reduce HTTP headers to the minimum required by Baillconnect.
-- [ ] Add a real server-side session check if needed.
+```sh
+make build
+./bin/bailup serve
+```
+
+## Deployment
+
+For this project, the simplest deployment is usually a single binary under `systemd`.
+
+Example unit:
+
+```ini
+[Unit]
+Description=Go Bailup MQTT bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=go-bailup
+Group=go-bailup
+EnvironmentFile=/etc/default/go-bailup
+ExecStart=/usr/local/bin/bailup serve
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Example environment file:
+
+```sh
+BAILUP_EMAIL=you@example.com
+BAILUP_PASS=your-password
+BAILUP_REGULATION=your-regulation-id
+MQTT_HOST=mqtt.example.local
+MQTT_PORT=1883
+MQTT_USERNAME=mqtt-user
+MQTT_PASSWORD=mqtt-password
+MQTT_TOPIC_PREFIX=custom_bailup
+MQTT_CLIENT_ID=go-bailup
+```
+
+This keeps deployment simple and makes logs available through `journalctl`.
+
 
 ## Libraries
 
