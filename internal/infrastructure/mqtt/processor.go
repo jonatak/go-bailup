@@ -35,7 +35,7 @@ type Processor struct {
 	mqttConnected bool
 }
 
-const refreshInterval = 30 * time.Second
+const refreshInterval = 10 * time.Second
 
 func NewProcessor(handler *Handler, service *application.HVACService) *Processor {
 	return &Processor{
@@ -52,8 +52,9 @@ func (p *Processor) Run(ctx context.Context) error {
 	defer close(jobCh)
 
 	go p.StartWorker(ctx, jobCh, resultCh)
-
 	defer timer.Stop()
+
+	slog.Info("Processor started")
 	for {
 
 		err := p.ensureMQTTConnected(ctx)
@@ -71,8 +72,9 @@ func (p *Processor) Run(ctx context.Context) error {
 				slog.Error(res.err.Error())
 				continue
 			}
-			fmt.Println(res.state)
+			slog.Info("state refreshed", "state", res.state)
 		case intent := <-p.handler.Intents():
+			slog.Info("received intent", "intent", intent)
 			if len(jobCh) == cap(jobCh) {
 				slog.Info("mqtt command dropped, worker queue is full")
 				continue

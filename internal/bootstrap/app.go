@@ -30,9 +30,7 @@ func NewHVACService() (*application.HVACService, error) {
 
 func NewMQTTServer(
 	system *application.HVACService,
-	intentChan chan<- application.Intent,
-	errorChan chan<- error,
-) (*mqtt.Handler, error) {
+) (*mqtt.Processor, error) {
 
 	state, err := system.CurrentState(context.Background())
 	if err != nil {
@@ -50,13 +48,17 @@ func NewMQTTServer(
 		return nil, fmt.Errorf("MQTT_PORT invalid: %s", os.Getenv("MQTT_PORT"))
 	}
 
+	if host == "" || username == "" || password == "" || prefix == "" || clientId == "" {
+		return nil, MqttInitError
+	}
+
 	params := mqtt.HandlerParams{
-		Host:       host,
-		Username:   username,
-		Password:   password,
-		Port:       port,
-		ClientID:   clientId,
-		Prefix:     prefix,
+		Host:     host,
+		Username: username,
+		Password: password,
+		Port:     port,
+		ClientID: clientId,
+		Prefix:   prefix,
 	}
 
 	handler, err := mqtt.NewMQTTHandler(params, state)
@@ -65,5 +67,5 @@ func NewMQTTServer(
 		return nil, err
 	}
 
-	return handler, nil
+	return mqtt.NewProcessor(handler, system), nil
 }
