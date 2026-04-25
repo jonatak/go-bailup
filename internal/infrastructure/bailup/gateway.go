@@ -100,8 +100,6 @@ func (g *Gateway) withReconnect(ctx context.Context, op func() error) error {
 			continue
 		}
 	}
-
-	return application.ErrGatewayUnavailable
 }
 
 func (g *Gateway) ensureStateLoaded(ctx context.Context) error {

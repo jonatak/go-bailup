@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,7 +14,7 @@ import (
 
 func main() {
 
-	cliApp := kong.Must(&cli.CLI{})
+	cliApp := kong.Must(&cli.CLI{}, kong.BindTo(context.Background(), (*context.Context)(nil)))
 	kongcompletion.Register(cliApp)
 
 	ctx, err := cliApp.Parse(os.Args[1:])

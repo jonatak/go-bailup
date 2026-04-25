@@ -13,7 +13,8 @@ type Handler struct {
 	client        mqtt.Client
 	prefix        string
 	subscriptions []*subscription
-	errorChan     chan<- error
+	errorChan     chan error
+	intentChan    chan application.Intent
 }
 
 func NewMQTTHandler(param HandlerParams, system *domain.HVACSystem) (*Handler, error) {
@@ -21,9 +22,10 @@ func NewMQTTHandler(param HandlerParams, system *domain.HVACSystem) (*Handler, e
 		return nil, err
 	}
 	mqttContext := &Handler{
-		client:    nil,
-		prefix:    param.Prefix,
-		errorChan: param.ErrorChan,
+		client:     nil,
+		prefix:     param.Prefix,
+		errorChan:  make(chan error),
+		intentChan: make(chan application.Intent),
 	}
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", param.Host, param.Port))
@@ -36,9 +38,17 @@ func NewMQTTHandler(param HandlerParams, system *domain.HVACSystem) (*Handler, e
 
 	mqttContext.client = mqtt.NewClient(opts)
 
-	mqttContext.registerSubscription(system, param.IntentChan)
+	mqttContext.registerSubscription(system, mqttContext.intentChan)
 
 	return mqttContext, nil
+}
+
+func (m *Handler) Errors() <-chan error {
+	return m.errorChan
+}
+
+func (m *Handler) Intents() <-chan application.Intent {
+	return m.intentChan
 }
 
 func (m *Handler) Connect() error {
