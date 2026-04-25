@@ -3,6 +3,7 @@ package domain
 type Thermostat struct {
 	id          int
 	room        string
+	temperature float64
 	preset      ThermostatPreset
 	isOn        bool
 	isRunning   bool
@@ -13,6 +14,7 @@ type Thermostat struct {
 func NewThermostat(
 	id int,
 	room string,
+	temperature float64,
 	preset ThermostatPreset,
 	isOn bool,
 	isRunning bool,
@@ -22,6 +24,7 @@ func NewThermostat(
 	thermostat := Thermostat{
 		id:          id,
 		room:        room,
+		temperature: temperature,
 		preset:      preset,
 		isOn:        isOn,
 		isRunning:   isRunning,
@@ -60,6 +63,10 @@ func (t *Thermostat) Room() string {
 	return t.room
 }
 
+func (t *Thermostat) Temperature() float64 {
+	return t.temperature
+}
+
 func (t *Thermostat) Preset() ThermostatPreset {
 	return t.preset
 }
@@ -78,6 +85,33 @@ func (t *Thermostat) CoolSetting() TemperatureSettings {
 
 func (t *Thermostat) HeatSetting() TemperatureSettings {
 	return t.heatSetting
+}
+
+func (t *Thermostat) Action(mode HVACSystemMode) (ThermostatAction, error) {
+	if !t.isOn {
+		return ThermostatActionOff, nil
+	}
+	if !t.isRunning {
+		return ThermostatActionIdle, nil
+	}
+	if err := mode.Validate(); err != nil {
+		return "", err
+	}
+
+	switch mode {
+	case HVACSystemModeCool:
+		return ThermostatActionCooling, nil
+	case HVACSystemModeHeat:
+		return ThermostatActionHeating, nil
+	case HVACSystemModeDry:
+		return ThermostatActionDrying, nil
+	case HVACSystemModeFanOnly:
+		return ThermostatActionFan, nil
+	case HVACSystemModeOff:
+		return ThermostatActionIdle, nil
+	default:
+		return "", ErrInvalidHVACMode
+	}
 }
 
 func (t *Thermostat) setPreset(preset ThermostatPreset) error {

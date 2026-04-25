@@ -35,7 +35,7 @@ type Processor struct {
 	mqttConnected bool
 }
 
-const refreshInterval = 10 * time.Second
+const refreshInterval = 60 * time.Second
 
 func NewProcessor(handler *Handler, service *application.HVACService) *Processor {
 	return &Processor{
@@ -55,6 +55,7 @@ func (p *Processor) Run(ctx context.Context) error {
 	defer timer.Stop()
 
 	slog.Info("Processor started")
+	jobCh <- refreshJob{}
 	for {
 
 		err := p.ensureMQTTConnected(ctx)
@@ -72,7 +73,10 @@ func (p *Processor) Run(ctx context.Context) error {
 				slog.Error(res.err.Error())
 				continue
 			}
-			slog.Info("state refreshed", "state", res.state)
+			if err := p.handler.PublishState(res.state); err != nil {
+				p.handleError(err)
+				continue
+			}
 		case intent := <-p.handler.Intents():
 			slog.Info("received intent", "intent", intent)
 			if len(jobCh) == cap(jobCh) {
@@ -97,6 +101,12 @@ func (p *Processor) handleError(err error) {
 		p.mqttConnected = false
 	case errors.Is(err, ErrSubscriptionError):
 		slog.Error("mqtt subscription failed", "err", err)
+		p.mqttConnected = false
+	case errors.Is(err, ErrRegistryError):
+		slog.Error("mqtt registry failed", "err", err)
+		p.mqttConnected = false
+	case errors.Is(err, ErrPublishError):
+		slog.Error("state publishing failed", "err", err)
 		p.mqttConnected = false
 	default:
 		slog.Error("mqtt processor error", "err", err)

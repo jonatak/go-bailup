@@ -16,11 +16,13 @@ func TestFormatHVACSystem(t *testing.T) {
 	assert.Contains(t, got, "Unit mode: heat")
 	assert.Contains(t, got, "Thermostats (2):")
 	assert.Contains(t, got, "#1 Living Room")
+	assert.Contains(t, got, "Temperature: 20.0 C")
 	assert.Contains(t, got, "Status: "+highlight("on", ansiGreen)+", running=false")
 	assert.Contains(t, got, "Active preset: "+highlight("comfort", ansiGreen))
 	assert.Contains(t, got, "Heat setpoints: comfort="+highlight("20.0 C", ansiCyan)+", eco=18.0 C")
 	assert.Contains(t, got, "Cool setpoints: comfort="+highlight("24.0 C", ansiCyan)+", eco=26.0 C")
 	assert.Contains(t, got, "#2 Bedroom")
+	assert.Contains(t, got, "Temperature: 20.0 C")
 	assert.Contains(t, got, "Status: off, running=true")
 	assert.Contains(t, got, "Active preset: "+highlight("eco", ansiGreen))
 }
@@ -68,6 +70,7 @@ func testFormatThermostat(
 	thermostat, err := domain.NewThermostat(
 		1,
 		room,
+		20.0,
 		preset,
 		isOn,
 		isRunning,

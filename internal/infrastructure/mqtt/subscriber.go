@@ -11,15 +11,16 @@ import (
 )
 
 type subscription struct {
-	thermostatID int
-	room         string
-	intentChan   chan<- application.Intent
-	errorChan    chan<- error
+	ID               int
+	room             string
+	thermostatConfig MQTTThermostat
+	intentChan       chan<- application.Intent
+	errorChan        chan<- error
 }
 
 func (s *subscription) setMode(_ mqtt.Client, msg mqtt.Message) {
-	mode := domain.HVACSystemMode(strings.TrimSpace(string(msg.Payload())))
 
+	mode := ModeToDomain(strings.TrimSpace(string(msg.Payload())))
 	if err := mode.Validate(); err != nil {
 		s.errorChan <- err
 		return

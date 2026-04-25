@@ -85,6 +85,7 @@ func thermostatFromModel(thermostat model.Thermostat) (domain.Thermostat, error)
 	return domain.NewThermostat(
 		thermostat.ID,
 		thermostat.Name,
+		thermostat.Temperature,
 		domain.ThermostatPreset(thermostat.T1T2.String()),
 		thermostat.IsOn,
 		thermostat.MotorState > 4,

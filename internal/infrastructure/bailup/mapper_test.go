@@ -24,6 +24,7 @@ func TestHVACSystemFromState(t *testing.T) {
 
 	assert.Equal(t, 9152, thermostats[0].ID())
 	assert.Equal(t, "Living Room", thermostats[0].Room())
+	assert.Equal(t, 20.4, thermostats[0].Temperature())
 	assert.Equal(t, domain.PresetComfort, thermostats[0].Preset())
 	assert.True(t, thermostats[0].IsOn())
 	assert.False(t, thermostats[0].IsRunning())
@@ -34,6 +35,7 @@ func TestHVACSystemFromState(t *testing.T) {
 
 	assert.Equal(t, 9154, thermostats[1].ID())
 	assert.Equal(t, "Bedroom", thermostats[1].Room())
+	assert.Equal(t, 19.2, thermostats[1].Temperature())
 	assert.Equal(t, domain.PresetEco, thermostats[1].Preset())
 	assert.False(t, thermostats[1].IsOn())
 	assert.True(t, thermostats[1].IsRunning())
