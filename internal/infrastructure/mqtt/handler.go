@@ -15,7 +15,7 @@ const discoveryTopic = "homeassistant"
 type Handler struct {
 	client      mqtt.Client
 	prefix      string
-	general     *subscription
+	general     *generalSubscription
 	thermostats map[int]*subscription
 	errorChan   chan error
 	intentChan  chan application.Intent
@@ -73,31 +73,41 @@ func (m *Handler) PublishState(system *domain.HVACSystem) error {
 	tempTotal := 0.0
 	values := make(map[string]string)
 
+	systemMode := system.Mode()
+
 	for _, t := range system.Thermostats() {
 		tempTotal += t.Temperature()
 		s := m.thermostats[t.ID()]
 		c := s.thermostatConfig
 		mode := "off"
-		if t.IsOn() {
+
+		values[c.PresetModeStateTopic] = ""
+		values[c.TemperatureStateTopic] = ""
+
+		if systemMode != domain.HVACSystemModeOff && t.IsOn() {
 			mode = "auto"
 		}
+
 		values[c.ModeStateTopic] = mode
 		setPoint, err := system.CurrentSetpoint(t.Room())
 		if err == nil {
 			values[c.TemperatureStateTopic] = formatFloat(setPoint)
+			values[c.PresetModeStateTopic] = PresetFromDomain(t.Preset())
 		}
 
-		action, err := t.Action(system.Mode())
+		action, err := t.Action(systemMode)
 		if err != nil {
 			return err
 		}
+		if systemMode == domain.HVACSystemModeOff {
+			action = domain.ThermostatActionOff
+		}
 
 		values[c.CurrentTemperatureTopic] = formatFloat(t.Temperature())
-		values[c.PresetModeStateTopic] = PresetFromDomain(t.Preset())
 		values[c.ActionTopic] = string(action)
 	}
 
-	values[m.general.thermostatConfig.ModeStateTopic] = ModeFromDomain(system.Mode())
+	values[m.general.thermostatConfig.ModeStateTopic] = ModeFromDomain(systemMode)
 	values[m.general.thermostatConfig.CurrentTemperatureTopic] = formatFloat(tempTotal / float64(len(system.Thermostats())))
 
 	for t, v := range values {
@@ -120,7 +130,7 @@ func (m *Handler) registerSubscription(system *domain.HVACSystem, intentChan cha
 	th := system.Thermostats()
 	subscriber := make(map[int]*subscription)
 	m.thermostats = subscriber
-	m.general = &subscription{
+	m.general = &generalSubscription{
 		room:             "general",
 		intentChan:       intentChan,
 		errorChan:        m.errorChan,

@@ -89,6 +89,25 @@ func TestHVACServiceApplyIntentReturnsGatewayError(t *testing.T) {
 	assert.Equal(t, 1, gateway.applyIntentCalls)
 }
 
+func TestHVACServiceApplyIntentIgnoresRoomPowerOnWhenSystemIsOff(t *testing.T) {
+	system := testHVACSystem(t, domain.HVACSystemModeOff)
+	gateway := &fakeHVACSystemGateway{
+		state: system,
+	}
+	service := NewHVACService(gateway)
+
+	got, err := service.ApplyIntent(context.Background(), SetRoomPowerIntent{
+		Room: "Living Room",
+		On:   true,
+	})
+
+	require.NoError(t, err)
+	assert.Same(t, system, got)
+	assert.Equal(t, 1, gateway.getStateCalls)
+	assert.Equal(t, 0, gateway.applyIntentCalls)
+	assert.Nil(t, gateway.appliedIntent)
+}
+
 func TestHVACServiceApplyIntentUsesExpectedResolvedIntents(t *testing.T) {
 	testCases := []struct {
 		name string

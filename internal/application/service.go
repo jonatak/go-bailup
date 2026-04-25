@@ -31,6 +31,9 @@ func (s *HVACService) ApplyIntent(ctx context.Context, intent Intent) (*domain.H
 		case SetRoomPresetIntent:
 			return i, system.SetRoomPreset(i.Room, i.Preset)
 		case SetRoomPowerIntent:
+			if i.On && system.Mode() == domain.HVACSystemModeOff {
+				return nil, nil
+			}
 			return i, system.SetRoomPower(i.Room, i.On)
 		case SetTemperatureIntent:
 			resolved, err := resolveTemperatureTarget(system, i)
@@ -54,6 +57,9 @@ func (s *HVACService) executeIntent(ctx context.Context, action intentFunc) (*do
 	intent, err := action(system)
 	if err != nil {
 		return nil, err
+	}
+	if intent == nil {
+		return system, nil
 	}
 
 	return s.gateway.ApplyResolvedIntent(ctx, intent)

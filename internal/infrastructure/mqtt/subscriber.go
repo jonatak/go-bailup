@@ -18,7 +18,14 @@ type subscription struct {
 	errorChan        chan<- error
 }
 
-func (s *subscription) setMode(_ mqtt.Client, msg mqtt.Message) {
+type generalSubscription struct {
+	room             string
+	thermostatConfig MQTTGeneralThermostat
+	intentChan       chan<- application.Intent
+	errorChan        chan<- error
+}
+
+func (s *generalSubscription) setMode(_ mqtt.Client, msg mqtt.Message) {
 
 	mode := ModeToDomain(strings.TrimSpace(string(msg.Payload())))
 	if err := mode.Validate(); err != nil {

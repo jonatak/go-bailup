@@ -52,6 +52,9 @@ func (s *HVACSystem) SetMode(mode HVACSystemMode) error {
 
 func (s *HVACSystem) SetRoomPreset(room string, preset ThermostatPreset) error {
 	th, err := s.findThermostat(room)
+	if s.mode != HVACSystemModeCool && s.mode != HVACSystemModeHeat {
+		return ErrInvalidPresetMode
+	}
 	if err != nil {
 		return err
 	}

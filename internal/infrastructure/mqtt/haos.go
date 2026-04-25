@@ -48,19 +48,30 @@ type MQTTThermostat struct {
 	ModeCommandTopic        string `json:"mode_command_topic"`
 	ModeStateTopic          string `json:"mode_state_topic"`
 	CurrentTemperatureTopic string `json:"current_temperature_topic"`
-	TemperatureCommandTopic string `json:"temperature_command_topic,omitempty"`
-	TemperatureStateTopic   string `json:"temperature_state_topic,omitempty"`
-	PresetModeCommandTopic  string `json:"preset_mode_command_topic,omitempty"`
-	PresetModeStateTopic    string `json:"preset_mode_state_topic,omitempty"`
+	TemperatureCommandTopic string `json:"temperature_command_topic"`
+	TemperatureStateTopic   string `json:"temperature_state_topic"`
+	PresetModeCommandTopic  string `json:"preset_mode_command_topic"`
+	PresetModeStateTopic    string `json:"preset_mode_state_topic"`
 
-	ActionTopic string   `json:"action_topic,omitempty"`
+	ActionTopic string   `json:"action_topic"`
 	Modes       []string `json:"modes"`
-	PresetModes []string `json:"preset_modes,omitempty"`
-	MinTemp     float64  `json:"min_temp,omitempty"`
-	MaxTemp     float64  `json:"max_temp,omitempty"`
-	TempStep    float64  `json:"temp_step,omitempty"`
+	PresetModes []string `json:"preset_modes"`
+	MinTemp     float64  `json:"min_temp"`
+	MaxTemp     float64  `json:"max_temp"`
+	TempStep    float64  `json:"temp_step"`
 	Precision   float64  `json:"precision"`
 	Device      Device   `json:"device"`
+}
+
+type MQTTGeneralThermostat struct {
+	Name                    string   `json:"name"`
+	UniqueID                string   `json:"unique_id"`
+	ModeCommandTopic        string   `json:"mode_command_topic"`
+	ModeStateTopic          string   `json:"mode_state_topic"`
+	CurrentTemperatureTopic string   `json:"current_temperature_topic"`
+	Modes                   []string `json:"modes"`
+	Precision               float64  `json:"precision"`
+	Device                  Device   `json:"device"`
 }
 
 func ThermostatFromDomain(t domain.Thermostat, prefix string) MQTTThermostat {
@@ -90,8 +101,8 @@ func ThermostatFromDomain(t domain.Thermostat, prefix string) MQTTThermostat {
 	}
 }
 
-func ThermostatGeneralFromDomain(prefix string) MQTTThermostat {
-	return MQTTThermostat{
+func ThermostatGeneralFromDomain(prefix string) MQTTGeneralThermostat {
+	return MQTTGeneralThermostat{
 		Name:                    "Thermostat General",
 		UniqueID:                fmt.Sprintf("%s-general", prefix),
 		ModeCommandTopic:        fmt.Sprintf("%s/general/mode/set", prefix),
@@ -100,7 +111,7 @@ func ThermostatGeneralFromDomain(prefix string) MQTTThermostat {
 		Modes:                   []string{"off", "cool", "heat", "dry", "fan_only"},
 		Precision:               0.1,
 		Device: Device{
-			Identifiers:  []string{"bailup_general_unit"},
+			Identifiers:  []string{"bailup_general"},
 			Manufacturer: "Bail Industry",
 			Name:         "Thermostat General",
 		},

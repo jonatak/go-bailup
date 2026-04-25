@@ -65,6 +65,17 @@ func TestThermostatJSONUsesSuggestedAreaTag(t *testing.T) {
 	assert.NotContains(t, string(payload), `"suggested area"`)
 }
 
+func TestGeneralThermostatJSONUsesDedicatedPayload(t *testing.T) {
+	payload, err := json.Marshal(ThermostatGeneralFromDomain("custom_bailup"))
+	require.NoError(t, err)
+
+	assert.Contains(t, string(payload), `"mode_command_topic":"custom_bailup/general/mode/set"`)
+	assert.NotContains(t, string(payload), `"temperature_command_topic"`)
+	assert.NotContains(t, string(payload), `"preset_mode_command_topic"`)
+	assert.NotContains(t, string(payload), `"action_topic"`)
+	assert.NotContains(t, string(payload), `"availability_topic"`)
+}
+
 func TestSlugify(t *testing.T) {
 	assert.Equal(t, "salle_tv", slugify(" Salle Tv "))
 }
