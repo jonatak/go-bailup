@@ -51,7 +51,7 @@ func (p *Processor) Run(ctx context.Context) error {
 	resultCh := make(chan result)
 	defer close(jobCh)
 
-	go p.StartWorker(ctx, jobCh, resultCh)
+	go p.startWorker(ctx, jobCh, resultCh)
 	defer timer.Stop()
 
 	slog.Info("Processor started")
@@ -84,6 +84,18 @@ func (p *Processor) Run(ctx context.Context) error {
 		}
 	}
 }
+
+func (p *Processor) startWorker(ctx context.Context, jobs <-chan job, results chan<- result) {
+	for j := range jobs {
+		switch j := j.(type) {
+		case intentJob:
+			results <- p.handleIntentWorker(ctx, j.intent)
+		case refreshJob:
+			results <- p.refreshState(ctx)
+		}
+	}
+}
+
 func (p *Processor) handleError(err error) {
 	switch {
 	case errors.Is(err, ErrConnectionLost):
@@ -134,31 +146,6 @@ func (p *Processor) handleIntentWorker(ctx context.Context, intent application.I
 	}
 }
 
-func (p *Processor) refreshState(ctx context.Context) result {
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
-	s, err := p.service.CurrentState(ctxWithTimeout)
-	cancel()
-	if err != nil {
-		return result{
-			err: fmt.Errorf("refresh state failed error: %w", err),
-		}
-	}
-	return result{
-		state: s,
-	}
-}
-
-func (p *Processor) StartWorker(ctx context.Context, jobs <-chan job, results chan<- result) {
-	for j := range jobs {
-		switch j := j.(type) {
-		case intentJob:
-			results <- p.handleIntentWorker(ctx, j.intent)
-		case refreshJob:
-			results <- p.refreshState(ctx)
-		}
-	}
-}
-
 func (p *Processor) handleWorkerResult(res result) bool {
 	slog.Info("processor case: worker result", "has_state", res.state != nil, "err", res.err)
 
@@ -194,4 +181,18 @@ func (p *Processor) handleIntentMsg(intent application.Intent, jobCh chan<- job)
 		intent: intent,
 	}
 	return true
+}
+
+func (p *Processor) refreshState(ctx context.Context) result {
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
+	s, err := p.service.CurrentState(ctxWithTimeout)
+	cancel()
+	if err != nil {
+		return result{
+			err: fmt.Errorf("refresh state failed error: %w", err),
+		}
+	}
+	return result{
+		state: s,
+	}
 }
