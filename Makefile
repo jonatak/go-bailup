@@ -23,5 +23,8 @@ fmt:
 vet:
 	go vet ./...
 
+lint:
+	golangci-lint run
+
 clean:
 	rm -rf bin

@@ -13,14 +13,18 @@ import (
 
 var _ application.HVACSystemGateway = (*Gateway)(nil)
 
+const stateCacheTTL = time.Minute
+
 type Gateway struct {
-	state  *model.State
-	client *Bailup
+	state         *model.State
+	lastRefreshed time.Time
+	client        *Bailup
 }
 
 func NewGateway(email, password, regulation string) *Gateway {
 	return &Gateway{
-		client: NewBailup(email, password, regulation),
+		client:        NewBailup(email, password, regulation),
+		lastRefreshed: time.Now(),
 	}
 }
 
@@ -72,7 +76,7 @@ func (g *Gateway) ApplyResolvedIntent(ctx context.Context, intent application.Re
 		return nil, err
 	}
 
-	g.state = result
+	g.setState(result)
 	system, err := HVACSystemFromState(result)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", application.ErrStateUnavailable, err)
@@ -103,7 +107,7 @@ func (g *Gateway) withReconnect(ctx context.Context, op func() error) error {
 }
 
 func (g *Gateway) ensureStateLoaded(ctx context.Context) error {
-	if g.state != nil {
+	if !g.stateExpired(time.Now()) {
 		return nil
 	}
 
@@ -112,7 +116,16 @@ func (g *Gateway) ensureStateLoaded(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		g.state = s
+		g.setState(s)
 		return nil
 	})
+}
+
+func (g *Gateway) stateExpired(now time.Time) bool {
+	return g.state == nil || now.After(g.lastRefreshed.Add(stateCacheTTL))
+}
+
+func (g *Gateway) setState(s *model.State) {
+	g.state = s
+	g.lastRefreshed = time.Now()
 }

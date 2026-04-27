@@ -29,6 +29,7 @@ func TestGatewayGetHVACSystemStateWrapsStateLoadError(t *testing.T) {
 
 func TestGatewayGetHVACSystemStateWrapsStateMappingError(t *testing.T) {
 	gateway := &Gateway{
+		lastRefreshed: time.Now(),
 		state: &model.State{
 			UCMode: model.UCModeHeat,
 			Thermostats: []model.Thermostat{
@@ -70,7 +71,8 @@ func TestGatewayApplyResolvedIntentWrapsStateLoadError(t *testing.T) {
 
 func TestGatewayApplyResolvedIntentWrapsIntentMappingError(t *testing.T) {
 	gateway := &Gateway{
-		state: mapperTestState(),
+		state:         mapperTestState(),
+		lastRefreshed: time.Now(),
 	}
 
 	system, err := gateway.ApplyResolvedIntent(context.Background(), application.SetRoomPowerIntent{
