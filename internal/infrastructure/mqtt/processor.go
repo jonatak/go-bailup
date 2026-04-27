@@ -46,13 +46,13 @@ func NewProcessor(handler *Handler, service *application.HVACService) *Processor
 
 func (p *Processor) Run(ctx context.Context) error {
 	defer p.handler.Close()
-	timer := time.NewTimer(refreshInterval)
+	ticker := time.NewTicker(refreshInterval)
 	jobCh := make(chan job, 10)
 	resultCh := make(chan result)
 	defer close(jobCh)
 
 	go p.startWorker(ctx, jobCh, resultCh)
-	defer timer.Stop()
+	defer ticker.Stop()
 
 	slog.Info("Processor started")
 	jobCh <- refreshJob{}
@@ -71,16 +71,11 @@ func (p *Processor) Run(ctx context.Context) error {
 			slog.Info("processor case: mqtt error", "err", err)
 			p.handleError(err)
 		case res := <-resultCh:
-			if p.handleWorkerResult(res) {
-				timer.Reset(refreshInterval)
-			}
+			p.handleWorkerResult(res)
 		case intent := <-p.handler.Intents():
-			if !p.handleIntentMsg(intent, jobCh) {
-				timer.Reset(refreshInterval)
-			}
-		case <-timer.C:
+			p.handleIntentMsg(intent, jobCh)
+		case <-ticker.C:
 			p.handleInactivityTimer(jobCh)
-			timer.Reset(refreshInterval)
 		}
 	}
 }
@@ -146,24 +141,22 @@ func (p *Processor) handleIntentWorker(ctx context.Context, intent application.I
 	}
 }
 
-func (p *Processor) handleWorkerResult(res result) bool {
+func (p *Processor) handleWorkerResult(res result) {
 	slog.Info("processor case: worker result", "has_state", res.state != nil, "err", res.err)
 
 	if res.err != nil {
 		slog.Error(res.err.Error())
-		return false
+		return
 	}
 
 	if err := p.handler.PublishState(res.state); err != nil {
 		p.handleError(err)
-		return false
+		return
 	}
-
-	return true
 }
 
 func (p *Processor) handleInactivityTimer(jobCh chan<- job) {
-	slog.Info("processor case: inactivity timer")
+	slog.Info("processor case: refresh tick")
 	if len(jobCh) != 0 {
 		slog.Info("refresh skipped, worker queue is not empty", "queue_len", len(jobCh), "queue_cap", cap(jobCh))
 		return
@@ -171,16 +164,15 @@ func (p *Processor) handleInactivityTimer(jobCh chan<- job) {
 	jobCh <- refreshJob{}
 }
 
-func (p *Processor) handleIntentMsg(intent application.Intent, jobCh chan<- job) bool {
+func (p *Processor) handleIntentMsg(intent application.Intent, jobCh chan<- job) {
 	slog.Info("processor case: intent", "intent", intent, "queue_len", len(jobCh), "queue_cap", cap(jobCh))
 	if len(jobCh) == cap(jobCh) {
 		slog.Info("mqtt command dropped, worker queue is full")
-		return false
+		return
 	}
 	jobCh <- intentJob{
 		intent: intent,
 	}
-	return true
 }
 
 func (p *Processor) refreshState(ctx context.Context) result {
