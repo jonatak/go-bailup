@@ -17,7 +17,7 @@ func NewHVACService() (*application.HVACService, error) {
 	bailupRegulation := os.Getenv("BAILUP_REGULATION")
 
 	if bailupEmail == "" || bailupPassword == "" || bailupRegulation == "" {
-		return nil, InitError
+		return nil, ErrInit
 	}
 
 	gateway := bailup.NewGateway(bailupEmail, bailupPassword, bailupRegulation)
@@ -49,7 +49,7 @@ func NewMQTTServer(
 	}
 
 	if host == "" || username == "" || password == "" || prefix == "" || clientId == "" {
-		return nil, MqttInitError
+		return nil, ErrMqttInit
 	}
 
 	params := mqtt.HandlerParams{
