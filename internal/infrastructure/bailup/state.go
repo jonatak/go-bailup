@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/jonatak/go-bailup/internal/infrastructure/bailup/command"
@@ -49,7 +50,11 @@ func (b *Bailup) Execute(ctx context.Context, cmd command.JSONCommand) (*model.S
 	if err != nil {
 		return nil, NewBailupError("could not fetch regulation state", errors.Join(err, ErrDisconnected))
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("could not close response body", "error", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, NewBailupError(

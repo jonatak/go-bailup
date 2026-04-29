@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -27,7 +28,11 @@ func (b *Bailup) Connect(ctx context.Context) error {
 	if err != nil {
 		return NewBailupError("could not load login page", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("could not close response body", "error", err)
+		}
+	}()
 
 	doc, err := html.Parse(resp.Body)
 	if err != nil {
@@ -87,7 +92,11 @@ func (b *Bailup) login(ctx context.Context, token string) error {
 	if err != nil {
 		return NewBailupError("could not submit login form", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("could not close response body", "error", err)
+		}
+	}()
 
 	if resp.StatusCode >= http.StatusBadRequest {
 		return NewBailupError(

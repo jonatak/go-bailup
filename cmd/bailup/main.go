@@ -57,7 +57,7 @@ func main() {
 	service, err := bootstrap.NewHVACService()
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, bootstrap.InitError)
+		fmt.Fprintln(os.Stderr, bootstrap.ErrInit)
 		return
 	}
 	if kongCtx.Command() == "serve" {
