@@ -11,8 +11,21 @@ import (
 	"github.com/jonatak/go-bailup/internal/application"
 	"github.com/jonatak/go-bailup/internal/bootstrap"
 	"github.com/jonatak/go-bailup/internal/infrastructure/cli"
+	"github.com/jonatak/go-bailup/internal/version"
 	kongcompletion "github.com/jotaen/kong-completion"
 )
+
+var (
+	Version   = "development"
+	CommitSHA = "unknown"
+	BuildTime = "unknown"
+) // these are overridden by the Makefile
+
+func init() {
+	version.Version = Version
+	version.CommitSHA = CommitSHA
+	version.BuildTime = BuildTime
+}
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -33,6 +46,14 @@ func main() {
 		}
 		return
 	}
+
+	if kongCtx.Command() == "version" {
+		if err := kongCtx.Run(); err != nil {
+			fmt.Fprintf(os.Stderr, "an error occured: %v\n", err)
+		}
+		return
+	}
+
 	service, err := bootstrap.NewHVACService()
 
 	if err != nil {
