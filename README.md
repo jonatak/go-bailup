@@ -19,6 +19,22 @@ This is a personal project, but the main flows are now usable:
 
 ## Install
 
+### GitHub Releases (latest binary)
+
+On Linux or macOS (amd64 or arm64), install the latest published release into `~/.local/bin` (or `XDG_BIN_HOME` if set):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/jonatak/go-bailup/main/scripts/install-latest-release.sh | bash
+```
+
+Add the install directory to your `PATH` if it is not already, for example:
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+### Build from source
+
 Clone and build:
 
 ```sh
