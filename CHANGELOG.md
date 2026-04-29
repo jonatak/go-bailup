@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/jonatak/go-bailup/compare/v0.2.0...v0.2.1) (2026-04-29)
+
+
+### Bug Fixes
+
+* typo in cicd ([4f6db79](https://github.com/jonatak/go-bailup/commit/4f6db79b4af95c003c29e6c295b8a745169a83b2))
+
 ## [0.2.0](https://github.com/jonatak/go-bailup/compare/v0.1.3...v0.2.0) (2026-04-29)
 
 
