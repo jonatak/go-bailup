@@ -8,4 +8,5 @@ type CLI struct {
 	Room       Room                      `cmd:"" help:"Manage rooms"`
 	Serve      Server                    `cmd:"" help:"Start mqtt server"`
 	Completion kongcompletion.Completion `cmd:"" help:"Outputs shell code for initialising tab completions"`
+	Version    VersionCommand            `cmd:"" help:"Show version information"`
 }

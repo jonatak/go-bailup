@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+project_name: "bailup"
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: "./cmd/bailup"
+    env:
+      - CGO_ENABLED=0
+    # Same symbols as Makefile LDFLAGS (-X main.* matches package main in cmd/fxpctl).
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.CommitSHA={{.ShortCommit}}
+      - -X main.BuildTime={{.Date}}
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats: [ "binary" ]
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+changelog:
+  disable: true  # we let release-please generate the changelog instead

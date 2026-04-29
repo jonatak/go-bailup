@@ -1,0 +1,51 @@
+name: Release Please
+
+'on':
+  push:
+    branches: [ main ]
+
+jobs:
+  track-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.run.outputs.release_created }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: run
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          manifest-file: .github/.release-please-manifest.json
+          config-file: .github/release-please-config.json
+
+  goreleaser:
+    if: ${{ needs.track-release.outputs.release_created }}
+    needs:
+      - track-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkou@v6
+        with:
+          fetch-tags: true
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
