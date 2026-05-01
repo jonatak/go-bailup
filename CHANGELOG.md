@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.0.0...v1.0.1) (2026-05-01)
+
+
+### Bug Fixes
+
+* correct changelog order in cicd ([8cda8a2](https://github.com/jonatak/baillconnect-to-mqtt/commit/8cda8a2097c08d3ecf4a8f802e45ddcb0047c0ae))
+
 ## [1.0.0](https://github.com/jonatak/baillconnect-to-mqtt/compare/v0.2.0...v1.0.0) (2026-05-01)
 
 
