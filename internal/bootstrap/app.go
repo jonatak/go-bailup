@@ -3,24 +3,20 @@ package bootstrap
 import (
 	"context"
 	"fmt"
-	"os"
-	"strconv"
+	"time"
 
-	"github.com/jonatak/go-bailup/internal/application"
-	"github.com/jonatak/go-bailup/internal/infrastructure/bailup"
-	"github.com/jonatak/go-bailup/internal/infrastructure/mqtt"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/application"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/config"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/mqtt"
 )
 
-func NewHVACService() (*application.HVACService, error) {
-	bailupEmail := os.Getenv("BAILUP_EMAIL")
-	bailupPassword := os.Getenv("BAILUP_PASS")
-	bailupRegulation := os.Getenv("BAILUP_REGULATION")
-
-	if bailupEmail == "" || bailupPassword == "" || bailupRegulation == "" {
+func NewHVACService(cfg config.Config) (*application.HVACService, error) {
+	if cfg.Baillconnect.Email == "" || cfg.Baillconnect.Password == "" || cfg.Baillconnect.Regulation == "" {
 		return nil, ErrInit
 	}
 
-	gateway := bailup.NewGateway(bailupEmail, bailupPassword, bailupRegulation)
+	gateway := bailup.NewGateway(cfg.Baillconnect.Email, cfg.Baillconnect.Password, cfg.Baillconnect.Regulation)
 	err := gateway.Connect(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("connect HVAC gateway: %w", err)
@@ -30,6 +26,7 @@ func NewHVACService() (*application.HVACService, error) {
 
 func NewMQTTServer(
 	system *application.HVACService,
+	cfg config.Config,
 ) (*mqtt.Processor, error) {
 
 	state, err := system.CurrentState(context.Background())
@@ -37,28 +34,17 @@ func NewMQTTServer(
 		return nil, err
 	}
 
-	host := os.Getenv("MQTT_HOST")
-	username := os.Getenv("MQTT_USERNAME")
-	password := os.Getenv("MQTT_PASSWORD")
-	prefix := os.Getenv("MQTT_TOPIC_PREFIX")
-	clientId := os.Getenv("MQTT_CLIENT_ID")
-	port, err := strconv.Atoi(os.Getenv("MQTT_PORT"))
-
-	if err != nil {
-		return nil, fmt.Errorf("MQTT_PORT invalid: %s", os.Getenv("MQTT_PORT"))
-	}
-
-	if host == "" || username == "" || password == "" || prefix == "" || clientId == "" {
+	if cfg.MQTT.Host == "" || cfg.MQTT.Username == "" || cfg.MQTT.Password == "" || cfg.MQTT.TopicPrefix == "" || cfg.MQTT.ClientID == "" || cfg.MQTT.Port <= 0 {
 		return nil, ErrMqttInit
 	}
 
 	params := mqtt.HandlerParams{
-		Host:     host,
-		Username: username,
-		Password: password,
-		Port:     port,
-		ClientID: clientId,
-		Prefix:   prefix,
+		Host:     cfg.MQTT.Host,
+		Username: cfg.MQTT.Username,
+		Password: cfg.MQTT.Password,
+		Port:     cfg.MQTT.Port,
+		ClientID: cfg.MQTT.ClientID,
+		Prefix:   cfg.MQTT.TopicPrefix,
 	}
 
 	handler, err := mqtt.NewMQTTHandler(params, state)
@@ -67,5 +53,5 @@ func NewMQTTServer(
 		return nil, err
 	}
 
-	return mqtt.NewProcessor(handler, system), nil
+	return mqtt.NewProcessor(handler, system, time.Duration(cfg.PollInterval)*time.Second), nil
 }

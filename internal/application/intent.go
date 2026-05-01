@@ -1,6 +1,6 @@
 package application
 
-import "github.com/jonatak/go-bailup/internal/domain"
+import "github.com/jonatak/baillconnect-to-mqtt/internal/domain"
 
 type Intent interface {
 	isIntent()

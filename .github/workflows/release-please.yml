@@ -49,3 +49,32 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sync-addon-changelog:
+    if: ${{ needs.track-release.outputs.release_created }}
+    needs:
+      - track-release
+      - goreleaser
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Sync add-on changelog
+        run: scripts/sync-addon-changelog.sh
+
+      - name: Commit synced add-on changelog
+        run: |
+          if git diff --quiet -- baillconnect-to-mqtt/CHANGELOG.md; then
+            echo "Add-on changelog already synced"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add baillconnect-to-mqtt/CHANGELOG.md
+          git commit -m "chore: sync add-on changelog [skip ci]"
+          git push

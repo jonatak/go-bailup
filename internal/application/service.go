@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jonatak/go-bailup/internal/domain"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/domain"
 )
 
 type intentFunc = func(system *domain.HVACSystem) (ResolvedIntent, error)

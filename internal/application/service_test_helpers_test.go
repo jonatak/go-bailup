@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/jonatak/go-bailup/internal/domain"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 

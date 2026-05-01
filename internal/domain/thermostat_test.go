@@ -3,7 +3,7 @@ package domain_test
 import (
 	"testing"
 
-	"github.com/jonatak/go-bailup/internal/domain"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

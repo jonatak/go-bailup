@@ -1,0 +1,41 @@
+name: "Baillconnect to MQTT"
+slug: "baillconnect_to_mqtt"
+description: "Bridge Baillconnect HVAC system to Home Assistant via MQTT"
+version: "1.0.0"
+
+arch:
+  - amd64
+  - aarch64
+  - armv7
+
+startup: services
+boot: auto
+init: false
+
+options:
+  baillconnect:
+    email: ""
+    password: ""
+    regulation: ""
+  mqtt:
+    host: "core-mosquitto"
+    port: 1883
+    username: ""
+    password: ""
+    topic_prefix: "baillconnect"
+    client_id: "baillconnect-to-mqtt"
+  poll_interval_seconds: 30
+
+schema:
+  baillconnect:
+    email: email
+    password: password
+    regulation: str
+  mqtt:
+    host: str
+    port: port
+    username: str
+    password: password
+    topic_prefix: str
+    client_id: str
+  poll_interval_seconds: int

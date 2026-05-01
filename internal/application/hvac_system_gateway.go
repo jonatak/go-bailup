@@ -3,7 +3,7 @@ package application
 import (
 	"context"
 
-	"github.com/jonatak/go-bailup/internal/domain"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/domain"
 )
 
 type HVACSystemGateway interface {

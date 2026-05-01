@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Install the latest published bailup binary from GitHub Releases.
+# Install the latest published baillconnect-to-mqtt binary from GitHub Releases.
 
 set -euo pipefail
 
-repo="${REPO:-jonatak/go-bailup}"
+repo="${REPO:-jonatak/baillconnect-to-mqtt}"
 arch="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/')"
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-release_name="bailup-$os-$arch"
+release_name="baillconnect-to-mqtt-$os-$arch"
 bin_home="${XDG_BIN_HOME:-$HOME/.local/bin}"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -36,4 +36,4 @@ sys.exit(1)
 curl -fsSL -L -o "$tmp_dir/$release_name" "$url"
 
 mkdir -p "$bin_home"
-install -m755 "$tmp_dir/$release_name" "$bin_home/bailup"
+install -m755 "$tmp_dir/$release_name" "$bin_home/baillconnect-to-mqtt"
