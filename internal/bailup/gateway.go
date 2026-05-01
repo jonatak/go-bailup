@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/jonatak/baillconnect-to-mqtt/internal/application"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/model"
 	"github.com/jonatak/baillconnect-to-mqtt/internal/domain"
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/model"
 )
 
 var _ application.HVACSystemGateway = (*Gateway)(nil)

@@ -1,6 +1,6 @@
-# Go-Bailup
+# Baillconnect to MQTT
 
-Go-Bailup is a small Go application for controlling Bailup / Baillconnect thermostats from the terminal and from Home Assistant over MQTT.
+Baillconnect to MQTT is a small Go application for exposing Bailup / Baillconnect thermostats to Home Assistant over MQTT.
 
 The project logs into the Baillconnect web interface, keeps the authenticated session in a cookie jar, reads the current regulation state, and sends command payloads for HVAC mode, room power, presets, and temperature setpoints.
 
@@ -8,14 +8,11 @@ The project logs into the Baillconnect web interface, keeps the authenticated se
 
 This is a personal project, but the main flows are now usable:
 
-- Fetch and display current thermostat state.
-- Change global HVAC mode.
-- List available rooms.
-- Turn a room thermostat on or off.
-- Switch a room between `eco` and `comfort`.
-- Set, increase, or decrease room temperature setpoints.
 - Run an MQTT/Home Assistant bridge with discovery, command handling, and state publishing.
-- Generate shell completion scripts.
+- Change global HVAC mode from Home Assistant.
+- Turn a room thermostat on or off from Home Assistant.
+- Switch a room between `eco` and `comfort` from Home Assistant.
+- Set room temperature setpoints from Home Assistant.
 
 ## Install
 
@@ -24,7 +21,7 @@ This is a personal project, but the main flows are now usable:
 On Linux or macOS (amd64 or arm64), install the latest published release into `~/.local/bin` (or `XDG_BIN_HOME` if set):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/jonatak/go-bailup/main/scripts/install-latest-release.sh | bash
+curl -fsSL https://raw.githubusercontent.com/jonatak/baillconnect-to-mqtt/main/scripts/install-latest-release.sh | bash
 ```
 
 Add the install directory to your `PATH` if it is not already, for example:
@@ -38,15 +35,15 @@ export PATH="$HOME/.local/bin:$PATH"
 Clone and build:
 
 ```sh
-git clone https://github.com/jonatak/go-bailup.git
-cd go-bailup
+git clone https://github.com/jonatak/baillconnect-to-mqtt.git
+cd baillconnect-to-mqtt
 make build
 ```
 
 The binary is expected at:
 
 ```sh
-./bin/bailup
+./bin/baillconnect-to-mqtt
 ```
 
 Install into your Go binary directory:
@@ -73,75 +70,17 @@ export MQTT_PORT="1883"
 export MQTT_USERNAME="mqtt-user"
 export MQTT_PASSWORD="mqtt-password"
 export MQTT_TOPIC_PREFIX="custom_bailup"
-export MQTT_CLIENT_ID="go-bailup"
+export MQTT_CLIENT_ID="baillconnect-to-mqtt"
 ```
 
 If you use `direnv`, put them in `.envrc` locally. Do not commit real credentials.
 
 ## Usage
 
-Show full thermostat status:
-
-```sh
-bailup status
-```
-
-Set the global HVAC mode:
-
-```sh
-bailup hvac-mode heat
-bailup hvac-mode cool
-bailup hvac-mode off
-```
-
-List rooms:
-
-```sh
-bailup room list
-```
-
-Turn a room thermostat on or off:
-
-```sh
-bailup room on "Living Room"
-bailup room off "Bedroom"
-```
-
-Switch a room preset:
-
-```sh
-bailup room preset comfort "Living Room"
-bailup room preset eco "Bedroom"
-```
-
-Set a room temperature:
-
-```sh
-bailup room temp set "Living Room" 20
-```
-
-Increase or decrease a room temperature:
-
-```sh
-bailup room temp up "Living Room"
-bailup room temp down "Living Room"
-bailup room temp up "Living Room" --by 0.5
-```
-
-Target a specific preset or HVAC setpoint:
-
-```sh
-bailup room temp set "Living Room" 19 --preset eco
-bailup room temp set "Living Room" 21 --preset comfort --mode heat
-bailup room temp up "Living Room" --by 1 --preset eco --mode cool
-```
-
-`--preset current` and `--mode current` are the defaults. Use explicit values when the current HVAC mode is not enough to identify the setpoint you want to modify.
-
 Run the MQTT / Home Assistant bridge:
 
 ```sh
-bailup serve
+baillconnect-to-mqtt
 ```
 
 The bridge:
@@ -151,40 +90,29 @@ The bridge:
 - publishes thermostat and general state
 - retries MQTT and Bailup connections when they drop
 
-## Completion
-
-Generate shell completion code with:
-
-```sh
-bailup completion
-```
-
-Use the generated output according to your shell setup.
-
 ## Architecture
 
 The project is split into a few focused packages:
 
-- `cmd/bailup`: installable CLI entrypoint.
+- `cmd/baillconnect-to-mqtt`: installable application entrypoint.
 - `internal/bootstrap`: application initialization and environment loading.
 - `internal/domain`: HVAC aggregate, thermostat behavior, and setpoint rules.
 - `internal/application`: use-case orchestration, inbound intents, target resolution, and outbound gateway port.
-- `internal/infrastructure/cli`: Kong-based CLI commands and terminal formatting.
-- `internal/infrastructure/mqtt`: MQTT command/message handling.
-- `internal/infrastructure/bailup`: authenticated Baillconnect gateway, login flow, state mapping, and resolved-intent to command mapping.
-- `internal/infrastructure/bailup/command`: JSON payload types sent to Baillconnect.
-- `internal/infrastructure/bailup/model`: Baillconnect API DTOs and mode conversions.
+- `internal/mqtt`: MQTT command/message handling.
+- `internal/bailup`: authenticated Baillconnect gateway, login flow, state mapping, and resolved-intent to command mapping.
+- `internal/bailup/command`: JSON payload types sent to Baillconnect.
+- `internal/bailup/model`: Baillconnect API DTOs and mode conversions.
 
 The main flows are:
 
 ```text
-CLI / MQTT message
+MQTT message
   -> application.Intent
   -> application.HVACService.ApplyIntent
   -> domain.HVACSystem
   -> application.ResolvedIntent
   -> application.HVACSystemGateway
-  -> infrastructure/bailup.Gateway
+  -> bailup.Gateway
   -> Baillconnect HTTP API
 ```
 
@@ -222,18 +150,11 @@ go test ./...
 go vet ./...
 ```
 
-Run the CLI locally:
+Run the bridge locally:
 
 ```sh
 make build
-./bin/bailup status
-```
-
-Run the MQTT bridge locally:
-
-```sh
-make build
-./bin/bailup serve
+./bin/baillconnect-to-mqtt
 ```
 
 ## Deployment
@@ -244,16 +165,16 @@ Example unit:
 
 ```ini
 [Unit]
-Description=Go Bailup MQTT bridge
+Description=Baillconnect MQTT bridge
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=go-bailup
-Group=go-bailup
-EnvironmentFile=/etc/default/go-bailup
-ExecStart=/usr/local/bin/bailup serve
+User=baillconnect-to-mqtt
+Group=baillconnect-to-mqtt
+EnvironmentFile=/etc/default/baillconnect-to-mqtt
+ExecStart=/usr/local/bin/baillconnect-to-mqtt
 Restart=on-failure
 RestartSec=5
 
@@ -272,7 +193,7 @@ MQTT_PORT=1883
 MQTT_USERNAME=mqtt-user
 MQTT_PASSWORD=mqtt-password
 MQTT_TOPIC_PREFIX=custom_bailup
-MQTT_CLIENT_ID=go-bailup
+MQTT_CLIENT_ID=baillconnect-to-mqtt
 ```
 
 This keeps deployment simple and makes logs available through `journalctl`.
@@ -280,6 +201,4 @@ This keeps deployment simple and makes logs available through `journalctl`.
 
 ## Libraries
 
-- [Kong](https://github.com/alecthomas/kong) for CLI parsing.
-- [kong-completion](https://github.com/jotaen/kong-completion) for shell completion.
 - [htmlquery](https://github.com/antchfx/htmlquery) for extracting login tokens.

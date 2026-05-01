@@ -3,7 +3,7 @@ package command
 import (
 	"encoding/json"
 
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/model"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/model"
 )
 
 type ModeCommand struct {

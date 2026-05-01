@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/jonatak/baillconnect-to-mqtt/internal/application"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/command"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/model"
 	"github.com/jonatak/baillconnect-to-mqtt/internal/domain"
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/command"
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/model"
 )
 
 func HVACSystemFromState(state *model.State) (*domain.HVACSystem, error) {

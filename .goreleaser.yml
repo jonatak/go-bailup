@@ -1,22 +1,22 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 version: 2
 
-project_name: "bailup"
+project_name: "baillconnect-to-mqtt"
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - main: "./cmd/bailup"
+  - main: "./cmd/baillconnect-to-mqtt"
     env:
       - CGO_ENABLED=0
-    # Same symbols as Makefile LDFLAGS (-X main.* matches package main in cmd/fxpctl).
+    # Same symbols as Makefile GO_LDFLAGS.
     ldflags:
       - -s -w
-      - -X main.Version={{.Version}}
-      - -X main.CommitSHA={{.ShortCommit}}
-      - -X main.BuildTime={{.Date}}
+      - -X github.com/jonatak/baillconnect-to-mqtt/internal/config.Version={{.Version}}
+      - -X github.com/jonatak/baillconnect-to-mqtt/internal/config.CommitSHA={{.ShortCommit}}
+      - -X github.com/jonatak/baillconnect-to-mqtt/internal/config.BuildTime={{.Date}}
     goos:
       - linux
       - darwin

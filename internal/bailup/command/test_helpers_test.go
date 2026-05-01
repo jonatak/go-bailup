@@ -1,6 +1,6 @@
 package command_test
 
-import "github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/model"
+import "github.com/jonatak/baillconnect-to-mqtt/internal/bailup/model"
 
 func testState() *model.State {
 	return &model.State{

@@ -9,8 +9,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/command"
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/model"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/command"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/model"
 )
 
 var ErrDisconnected = errors.New("bailup disconnected")

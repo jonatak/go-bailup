@@ -3,7 +3,7 @@ package command_test
 import (
 	"testing"
 
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/command"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/command"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

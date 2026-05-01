@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/model"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/model"
 )
 
 func findThermostat(s *model.State, room string) (*model.Thermostat, error) {

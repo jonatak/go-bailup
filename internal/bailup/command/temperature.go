@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/jonatak/baillconnect-to-mqtt/internal/infrastructure/bailup/model"
+	"github.com/jonatak/baillconnect-to-mqtt/internal/bailup/model"
 )
 
 type TemperatureCommand struct {
