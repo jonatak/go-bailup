@@ -23,10 +23,16 @@ builds:
     goarch:
       - amd64
       - arm64
+      - arm
+    goarm:
+      - "7"
+    ignore:
+      - goos: darwin
+        goarch: arm
 
 archives:
   - formats: [ "binary" ]
-    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ if eq .Arch \"arm\" }}armv{{ .Arm }}{{ else }}{{ .Arch }}{{ end }}"
 
 checksum:
   name_template: 'checksums.txt'
