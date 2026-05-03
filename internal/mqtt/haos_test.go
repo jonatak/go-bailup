@@ -14,7 +14,7 @@ func TestThermostatFromDomain(t *testing.T) {
 
 	got := ThermostatFromDomain(thermostat, "custom_bailup")
 
-	assert.Equal(t, "Salle Tv Thermostat", got.Name)
+	assert.Equal(t, "climate", got.Name)
 	assert.Equal(t, "custom_bailup-salle_tv-9152", got.UniqueID)
 	assert.Equal(t, "custom_bailup/th_9152/mode/set", got.ModeCommandTopic)
 	assert.Equal(t, "custom_bailup/th_9152/mode", got.ModeStateTopic)
@@ -41,7 +41,7 @@ func TestThermostatFromDomain(t *testing.T) {
 func TestThermostatGeneralFromDomain(t *testing.T) {
 	got := ThermostatGeneralFromDomain("custom_bailup")
 
-	assert.Equal(t, "Thermostat General", got.Name)
+	assert.Equal(t, "climate", got.Name)
 	assert.Equal(t, "custom_bailup-general", got.UniqueID)
 	assert.Equal(t, "custom_bailup/general/mode/set", got.ModeCommandTopic)
 	assert.Equal(t, "custom_bailup/general/mode", got.ModeStateTopic)

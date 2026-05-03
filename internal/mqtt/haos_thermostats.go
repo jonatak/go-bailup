@@ -76,7 +76,7 @@ type MQTTGeneralThermostat struct {
 
 func ThermostatFromDomain(t domain.Thermostat, prefix string) MQTTThermostat {
 	return MQTTThermostat{
-		Name:                    fmt.Sprintf("%s Thermostat", t.Room()),
+		Name:                    "climate",
 		UniqueID:                fmt.Sprintf("%s-%s-%d", prefix, slugify(t.Room()), t.ID()),
 		ModeCommandTopic:        fmt.Sprintf("%s/th_%d/mode/set", prefix, t.ID()),
 		ModeStateTopic:          fmt.Sprintf("%s/th_%d/mode", prefix, t.ID()),
@@ -103,7 +103,7 @@ func ThermostatFromDomain(t domain.Thermostat, prefix string) MQTTThermostat {
 
 func ThermostatGeneralFromDomain(prefix string) MQTTGeneralThermostat {
 	return MQTTGeneralThermostat{
-		Name:                    "Thermostat General",
+		Name:                    "climate",
 		UniqueID:                fmt.Sprintf("%s-general", prefix),
 		ModeCommandTopic:        fmt.Sprintf("%s/general/mode/set", prefix),
 		ModeStateTopic:          fmt.Sprintf("%s/general/mode", prefix),

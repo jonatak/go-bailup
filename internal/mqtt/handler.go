@@ -79,10 +79,13 @@ func (m *Handler) PublishState(system *domain.HVACSystem) error {
 		tempTotal += t.Temperature()
 		s := m.thermostats[t.ID()]
 		c := s.thermostatConfig
+		b := s.batteryConfig
 		mode := "off"
 
 		values[c.PresetModeStateTopic] = ""
 		values[c.TemperatureStateTopic] = ""
+		values[b.StateTopic] = "100"
+		values[c.CurrentTemperatureTopic] = formatFloat(t.Temperature())
 
 		if systemMode != domain.HVACSystemModeOff && t.IsOn() {
 			mode = "auto"
@@ -95,6 +98,10 @@ func (m *Handler) PublishState(system *domain.HVACSystem) error {
 			values[c.PresetModeStateTopic] = PresetFromDomain(t.Preset())
 		}
 
+		if t.IsBatteryLow() {
+			values[b.StateTopic] = "1"
+		}
+
 		action, err := t.Action(systemMode)
 		if err != nil {
 			return err
@@ -103,7 +110,6 @@ func (m *Handler) PublishState(system *domain.HVACSystem) error {
 			action = domain.ThermostatActionOff
 		}
 
-		values[c.CurrentTemperatureTopic] = formatFloat(t.Temperature())
 		values[c.ActionTopic] = string(action)
 	}
 
@@ -144,6 +150,7 @@ func (m *Handler) registerSubscription(system *domain.HVACSystem, intentChan cha
 			intentChan:       intentChan,
 			errorChan:        m.errorChan,
 			thermostatConfig: ThermostatFromDomain(t, m.prefix),
+			batteryConfig:    BatteryFromThermostatDomain(t, m.prefix),
 		}
 	}
 }
@@ -165,7 +172,15 @@ func (m *Handler) registerDiscovery() error {
 			return err
 		}
 
+		b, err := json.Marshal(t.batteryConfig)
+		if err != nil {
+			return err
+		}
+
 		if token := m.client.Publish(fmt.Sprintf("%s/climate/th_%d/config", discoveryTopic, t.ID), byte(0), true, j); token.Wait() && token.Error() != nil {
+			return token.Error()
+		}
+		if token := m.client.Publish(fmt.Sprintf("%s/sensor/th_%d_battery/config", discoveryTopic, t.ID), byte(0), true, b); token.Wait() && token.Error() != nil {
 			return token.Error()
 		}
 	}

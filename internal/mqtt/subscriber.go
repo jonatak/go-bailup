@@ -14,6 +14,7 @@ type subscription struct {
 	ID               int
 	room             string
 	thermostatConfig MQTTThermostat
+	batteryConfig    MQTTBatterySensor
 	intentChan       chan<- application.Intent
 	errorChan        chan<- error
 }
