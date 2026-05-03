@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.1.0...v1.2.0) (2026-05-03)
+
+
+### Features
+
+* add apparmor ([dbeede8](https://github.com/jonatak/baillconnect-to-mqtt/commit/dbeede86c9c6b5095a5d39abca710593565d5825))
+* make sure mqtt handler can send new cmd in a non blocking maner ([fbc1333](https://github.com/jonatak/baillconnect-to-mqtt/commit/fbc13332dbef81024032db2b6a2c820846e03ca7))
+* mutualise installation script with docker build ([5153b14](https://github.com/jonatak/baillconnect-to-mqtt/commit/5153b14a8bcb9a1e756ecb3be5d667e5cde47164))
+
+
+### Bug Fixes
+
+* exit with error code in case of error ([a0bcb93](https://github.com/jonatak/baillconnect-to-mqtt/commit/a0bcb9313ea82735ad1b0a3de77ffa30c860416b))
+
 ## [1.1.0](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.0.1...v1.1.0) (2026-05-03)
 
 
