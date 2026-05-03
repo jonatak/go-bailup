@@ -171,12 +171,10 @@ func (p *Processor) handleInactivityTimer(jobCh chan<- job) {
 
 func (p *Processor) handleIntentMsg(intent application.Intent, jobCh chan<- job) {
 	slog.Info("processor case: intent", "intent", intent, "queue_len", len(jobCh), "queue_cap", cap(jobCh))
-	if len(jobCh) == cap(jobCh) {
+	select {
+	case jobCh <- intentJob{intent: intent}:
+	default:
 		slog.Info("mqtt command dropped, worker queue is full")
-		return
-	}
-	jobCh <- intentJob{
-		intent: intent,
 	}
 }
 
