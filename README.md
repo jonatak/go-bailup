@@ -1,5 +1,9 @@
 # Baillconnect to MQTT
 
+[![CI](https://github.com/jonatak/baillconnect-to-mqtt/actions/workflows/ci.yml/badge.svg)](https://github.com/jonatak/baillconnect-to-mqtt/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jonatak/baillconnect-to-mqtt/branch/main/graph/badge.svg)](https://codecov.io/gh/jonatak/baillconnect-to-mqtt)
+[![Latest release](https://img.shields.io/github/v/release/jonatak/baillconnect-to-mqtt?label=release)](https://github.com/jonatak/baillconnect-to-mqtt/releases/latest)
+
 Baillconnect to MQTT is a small Go application for exposing Bailup / Baillconnect thermostats to Home Assistant over MQTT.
 
 The project logs into the Baillconnect web interface, keeps the authenticated session in a cookie jar, reads the current regulation state, and sends command payloads for HVAC mode, room power, presets, and temperature setpoints.
@@ -13,6 +17,7 @@ This is a personal project, but the main flows are now usable:
 - Turn a room thermostat on or off from Home Assistant.
 - Switch a room between `eco` and `comfort` from Home Assistant.
 - Set room temperature setpoints from Home Assistant.
+- Expose each thermostat battery status as a Home Assistant diagnostic battery sensor.
 
 ## Install
 
@@ -97,6 +102,8 @@ export BAILUP_PASS="your-password"
 export BAILUP_REGULATION="your-regulation-id"
 ```
 
+The `BAILLCONNECT_EMAIL`, `BAILLCONNECT_PASSWORD`, and `BAILLCONNECT_REGULATION` names are also accepted. `BAILUP_PASSWORD` is accepted as an alias for `BAILUP_PASS`.
+
 For MQTT / Home Assistant mode, also set:
 
 ```sh
@@ -106,6 +113,7 @@ export MQTT_USERNAME="mqtt-user"
 export MQTT_PASSWORD="mqtt-password"
 export MQTT_TOPIC_PREFIX="custom_bailup"
 export MQTT_CLIENT_ID="baillconnect-to-mqtt"
+export POLL_INTERVAL_SECONDS="30"
 ```
 
 If you use `direnv`, put them in `.envrc` locally. Do not commit real credentials.
@@ -128,7 +136,7 @@ The bridge:
 
 - subscribes to command topics under `MQTT_TOPIC_PREFIX`
 - publishes Home Assistant MQTT discovery payloads
-- publishes thermostat and general state
+- publishes thermostat, general, and battery diagnostic state
 - retries MQTT and Bailup connections when they drop
 
 ## Architecture
@@ -173,8 +181,11 @@ Home Assistant discovery uses:
 
 - `homeassistant/climate/general/config`
 - `homeassistant/climate/th_<id>/config`
+- `homeassistant/sensor/th_<id>_battery/config`
 
 Command and state topics use the configured `MQTT_TOPIC_PREFIX` and stable thermostat IDs such as `th_9152`.
+
+Per-room climate entities expose mode, preset, target temperature, current temperature, and action. Battery entities are MQTT `sensor` entities with `device_class: battery`, `state_class: measurement`, and `%` as the unit.
 
 ## Development
 
