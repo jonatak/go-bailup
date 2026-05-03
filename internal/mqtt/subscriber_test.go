@@ -12,9 +12,11 @@ func TestSubscriptionTurnOnPublishesIntent(t *testing.T) {
 	intents := make(chan application.Intent, 1)
 	errors := make(chan error, 1)
 	sub := &subscription{
-		room:       "living room",
-		intentChan: intents,
-		errorChan:  errors,
+		subscriptionSender: subscriptionSender{
+			intentChan: intents,
+			errorChan:  errors,
+		},
+		room: "living room",
 	}
 
 	sub.turnOnOff(nil, testMQTTMessage{payload: []byte("auto")})

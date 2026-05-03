@@ -29,6 +29,9 @@ type result struct {
 	err   error
 }
 
+// Processor is the main synchronisation loop between bailup http client
+// and mqtt brokers, it will loop to receive event from either side to
+// synchronise thermostat state.
 type Processor struct {
 	service         *application.HVACService
 	handler         *Handler
@@ -51,6 +54,8 @@ func NewProcessor(handler *Handler, service *application.HVACService, interval t
 
 func (p *Processor) Run(ctx context.Context) error {
 	defer p.handler.Close()
+
+	// use to refresh state at every interval
 	ticker := time.NewTicker(p.refreshInterval)
 	jobCh := make(chan job, 10)
 	resultCh := make(chan result)

@@ -3,6 +3,7 @@ package mqtt
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -28,8 +29,8 @@ func NewMQTTHandler(param HandlerParams, system *domain.HVACSystem) (*Handler, e
 	mqttContext := &Handler{
 		client:     nil,
 		prefix:     param.Prefix,
-		errorChan:  make(chan error),
-		intentChan: make(chan application.Intent),
+		errorChan:  make(chan error, 10),
+		intentChan: make(chan application.Intent, 10),
 	}
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", param.Host, param.Port))
@@ -136,21 +137,23 @@ func (m *Handler) registerSubscription(system *domain.HVACSystem, intentChan cha
 	th := system.Thermostats()
 	subscriber := make(map[int]*subscription)
 	m.thermostats = subscriber
+	sender := subscriptionSender{
+		intentChan: intentChan,
+		errorChan:  m.errorChan,
+	}
 	m.general = &generalSubscription{
-		room:             "general",
-		intentChan:       intentChan,
-		errorChan:        m.errorChan,
-		thermostatConfig: ThermostatGeneralFromDomain(m.prefix),
+		subscriptionSender: sender,
+		room:               "general",
+		thermostatConfig:   ThermostatGeneralFromDomain(m.prefix),
 	}
 	for _, t := range th {
 		roomName := strings.ToLower(t.Room())
 		m.thermostats[t.ID()] = &subscription{
-			ID:               t.ID(),
-			room:             roomName,
-			intentChan:       intentChan,
-			errorChan:        m.errorChan,
-			thermostatConfig: ThermostatFromDomain(t, m.prefix),
-			batteryConfig:    BatteryFromThermostatDomain(t, m.prefix),
+			subscriptionSender: sender,
+			ID:                 t.ID(),
+			room:               roomName,
+			thermostatConfig:   ThermostatFromDomain(t, m.prefix),
+			batteryConfig:      BatteryFromThermostatDomain(t, m.prefix),
 		}
 	}
 }
@@ -208,21 +211,29 @@ func (m *Handler) subscribe() error {
 }
 
 func (m *Handler) messageHandler(_ mqtt.Client, msg mqtt.Message) {
-	m.errorChan <- fmt.Errorf("received unhandled message from topic: %s", msg.Topic())
+	m.sendError(fmt.Errorf("received unhandled message from topic: %s", msg.Topic()))
 }
 
 func (m *Handler) connectionHandler(client mqtt.Client) {
 	if err := m.subscribe(); err != nil {
-		m.errorChan <- fmt.Errorf("%w: %w", ErrSubscriptionError, err)
+		m.sendError(fmt.Errorf("%w: %w", ErrSubscriptionError, err))
 		return
 	}
 	if err := m.registerDiscovery(); err != nil {
-		m.errorChan <- fmt.Errorf("%w: %w", ErrRegistryError, err)
+		m.sendError(fmt.Errorf("%w: %w", ErrRegistryError, err))
 	}
 }
 
 func (m *Handler) connectionLostHandler(client mqtt.Client, err error) {
 	if m.errorChan != nil {
-		m.errorChan <- fmt.Errorf("%w: %w", ErrConnectionLost, err)
+		m.sendError(fmt.Errorf("%w: %w", ErrConnectionLost, err))
+	}
+}
+
+func (m *Handler) sendError(err error) {
+	select {
+	case m.errorChan <- err:
+	default:
+		slog.Error("handler couldn't send error, errorChan is full.", "error", err)
 	}
 }
