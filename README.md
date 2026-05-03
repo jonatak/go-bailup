@@ -249,3 +249,5 @@ This keeps deployment simple and makes logs available through `journalctl`.
 ## Libraries
 
 - [htmlquery](https://github.com/antchfx/htmlquery) for extracting login tokens.
+- [viper](https://github.com/spf13/viper) for configuration management.
+- [Paho Mqtt Golang](https://github.com/eclipse/paho.mqtt.golang) to manage mqtt connection.

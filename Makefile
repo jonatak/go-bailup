@@ -4,7 +4,7 @@ COMMIT_SHA ?= $(shell git rev-parse HEAD 2>/dev/null || echo unknown)
 BUILD_TIME ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 GO_LDFLAGS ?= -s -w -X github.com/jonatak/baillconnect-to-mqtt/internal/config.Version=$(VERSION) -X github.com/jonatak/baillconnect-to-mqtt/internal/config.CommitSHA=$(COMMIT_SHA) -X github.com/jonatak/baillconnect-to-mqtt/internal/config.BuildTime=$(BUILD_TIME)
 
-.PHONY: all build test test-short fmt vet clean install
+.PHONY: all build test ci-test test-short fmt vet clean install
 
 all: build
 
@@ -17,6 +17,10 @@ build:
 
 test:
 	go test -v ./...
+
+ci-test:
+	go test -v -coverprofile=coverage.out -covermode=atomic ./...
+	go tool cover -func=coverage.out
 
 test-short:
 	go test ./...
