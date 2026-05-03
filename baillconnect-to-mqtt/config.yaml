@@ -1,7 +1,7 @@
 name: Baillconnect to MQTT
 slug: baillconnect_to_mqtt
 description: Bridge Baillconnect HVAC system to Home Assistant via MQTT
-version: 1.2.3
+version: 1.2.4
 arch:
   - amd64
   - aarch64

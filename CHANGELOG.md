@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.2.3...v1.2.4) (2026-05-03)
+
+
+### Bug Fixes
+
+* add proper exit on cancelled context ([5d133d8](https://github.com/jonatak/baillconnect-to-mqtt/commit/5d133d81692e33d227ec9b44d1019b14c4b57ec7))
+
 ## [1.2.3](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.2.2...v1.2.3) (2026-05-03)
 
 
