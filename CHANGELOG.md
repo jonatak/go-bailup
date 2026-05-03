@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.2.2...v1.2.3) (2026-05-03)
+
+
+### Bug Fixes
+
+* add broader permission on apparmor ([848b78a](https://github.com/jonatak/baillconnect-to-mqtt/commit/848b78ac7c5a7acd08499d6a0e1efa8d2f44545c))
+
 ## [1.2.2](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.2.1...v1.2.2) (2026-05-03)
 
 
