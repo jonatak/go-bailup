@@ -23,22 +23,23 @@ func main() {
 
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	service, err := bootstrap.NewHVACService(cfg)
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, bootstrap.ErrInit)
-		return
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 	server, err := bootstrap.NewMQTTServer(service, cfg)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 	if err := server.Run(ctx); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 }
