@@ -91,6 +91,7 @@ func thermostatFromModel(thermostat model.Thermostat) (domain.Thermostat, error)
 		thermostat.MotorState > 4,
 		heatSetting,
 		coolSetting,
+		thermostat.IsBatteryLow,
 	)
 }
 

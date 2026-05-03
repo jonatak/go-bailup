@@ -12,7 +12,7 @@ func TestNewThermostatRejectsInvalidPreset(t *testing.T) {
 	heat := mustTemperatureSettings(t, domain.HVACSystemModeHeat, 20, 18)
 	cool := mustTemperatureSettings(t, domain.HVACSystemModeCool, 24, 26)
 
-	thermostat, err := domain.NewThermostat(1, "Living Room", 20.0, domain.ThermostatPreset("away"), true, false, heat, cool)
+	thermostat, err := domain.NewThermostat(1, "Living Room", 20.0, domain.ThermostatPreset("away"), true, false, heat, cool, false)
 
 	require.ErrorIs(t, err, domain.ErrInvalidPresetMode)
 	assert.Equal(t, domain.Thermostat{}, thermostat)
@@ -21,7 +21,7 @@ func TestNewThermostatRejectsInvalidPreset(t *testing.T) {
 func TestNewThermostatRejectsInvalidTemperatureSettings(t *testing.T) {
 	cool := mustTemperatureSettings(t, domain.HVACSystemModeCool, 24, 26)
 
-	thermostat, err := domain.NewThermostat(1, "Living Room", 20.0, domain.PresetComfort, true, false, domain.TemperatureSettings{}, cool)
+	thermostat, err := domain.NewThermostat(1, "Living Room", 20.0, domain.PresetComfort, true, false, domain.TemperatureSettings{}, cool, false)
 
 	require.ErrorIs(t, err, domain.ErrSetpointUnsupportedForMode)
 	assert.Equal(t, domain.Thermostat{}, thermostat)
@@ -57,7 +57,7 @@ func TestThermostatAction(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			thermostat, err := domain.NewThermostat(1, "Living Room", 20.0, domain.PresetComfort, tc.isOn, tc.isRunning, heat, cool)
+			thermostat, err := domain.NewThermostat(1, "Living Room", 20.0, domain.PresetComfort, tc.isOn, tc.isRunning, heat, cool, false)
 			require.NoError(t, err)
 
 			got, err := thermostat.Action(tc.mode)
@@ -92,7 +92,7 @@ func mustThermostat(t *testing.T, room string, preset domain.ThermostatPreset) d
 
 	heat := mustTemperatureSettings(t, domain.HVACSystemModeHeat, 20, 18)
 	cool := mustTemperatureSettings(t, domain.HVACSystemModeCool, 24, 26)
-	thermostat, err := domain.NewThermostat(1, room, 20.0, preset, true, false, heat, cool)
+	thermostat, err := domain.NewThermostat(1, room, 20.0, preset, true, false, heat, cool, false)
 	require.NoError(t, err)
 
 	return thermostat

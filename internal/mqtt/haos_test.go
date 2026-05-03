@@ -88,7 +88,7 @@ func testHAOSThermostat(t *testing.T, id int, room string, preset domain.Thermos
 	coolSetting, err := domain.NewTemperatureSettings(domain.HVACSystemModeCool, 24, 26)
 	require.NoError(t, err)
 
-	thermostat, err := domain.NewThermostat(id, room, 20.0, preset, true, false, heatSetting, coolSetting)
+	thermostat, err := domain.NewThermostat(id, room, 20.0, preset, true, false, heatSetting, coolSetting, false)
 	require.NoError(t, err)
 
 	return thermostat

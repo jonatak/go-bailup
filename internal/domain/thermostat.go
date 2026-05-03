@@ -1,14 +1,15 @@
 package domain
 
 type Thermostat struct {
-	id          int
-	room        string
-	temperature float64
-	preset      ThermostatPreset
-	isOn        bool
-	isRunning   bool
-	coolSetting TemperatureSettings
-	heatSetting TemperatureSettings
+	id           int
+	room         string
+	temperature  float64
+	preset       ThermostatPreset
+	isOn         bool
+	isRunning    bool
+	isBatteryLow bool
+	coolSetting  TemperatureSettings
+	heatSetting  TemperatureSettings
 }
 
 func NewThermostat(
@@ -20,16 +21,18 @@ func NewThermostat(
 	isRunning bool,
 	heatSetting TemperatureSettings,
 	coolSetting TemperatureSettings,
+	isBatteryLow bool,
 ) (Thermostat, error) {
 	thermostat := Thermostat{
-		id:          id,
-		room:        room,
-		temperature: temperature,
-		preset:      preset,
-		isOn:        isOn,
-		isRunning:   isRunning,
-		heatSetting: heatSetting,
-		coolSetting: coolSetting,
+		id:           id,
+		room:         room,
+		temperature:  temperature,
+		preset:       preset,
+		isOn:         isOn,
+		isRunning:    isRunning,
+		heatSetting:  heatSetting,
+		coolSetting:  coolSetting,
+		isBatteryLow: isBatteryLow,
 	}
 
 	if err := thermostat.Validate(); err != nil {
@@ -85,6 +88,10 @@ func (t *Thermostat) CoolSetting() TemperatureSettings {
 
 func (t *Thermostat) HeatSetting() TemperatureSettings {
 	return t.heatSetting
+}
+
+func (t *Thermostat) IsBatteryLow() bool {
+	return t.isBatteryLow
 }
 
 func (t *Thermostat) Action(mode HVACSystemMode) (ThermostatAction, error) {

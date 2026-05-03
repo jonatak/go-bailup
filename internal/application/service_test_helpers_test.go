@@ -56,6 +56,7 @@ func testHVACSystem(t *testing.T, mode domain.HVACSystemMode) *domain.HVACSystem
 		false,
 		heatSetting,
 		coolSetting,
+		false,
 	)
 	require.NoError(t, err)
 
