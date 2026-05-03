@@ -10,7 +10,7 @@ profile baillconnect_to_mqtt flags=(attach_disconnected,mediate_deleted) {
   signal (send,receive) set=(term,int,hup,cont),
 
   # Home Assistant base images start CMD through S6.
-  /init ix,
+  /init rix,
   /bin/** ix,
   /usr/bin/** ix,
   /run/{s6,s6-rc*,service}/** ix,
