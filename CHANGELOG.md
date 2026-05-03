@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.0.1...v1.1.0) (2026-05-03)
+
+
+### Features
+
+* add battery monitoring in mqtt ([b845d7e](https://github.com/jonatak/baillconnect-to-mqtt/commit/b845d7eff43d34eaea0b832f58ea2d2094f03ca3))
+* add battery state in domain ([c6bca8b](https://github.com/jonatak/baillconnect-to-mqtt/commit/c6bca8b7eaa586cefe5593d9677537bcd47e087e))
+* improve cicd ([8a1bce5](https://github.com/jonatak/baillconnect-to-mqtt/commit/8a1bce5fd7eb70b81dbb54951841bc937af91494))
+
+
+### Bug Fixes
+
+* fix flaky viper env test ([f080875](https://github.com/jonatak/baillconnect-to-mqtt/commit/f0808753d2f25765328f4779ae3a036d23e91690))
+
 ## [1.0.1](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.0.0...v1.0.1) (2026-05-01)
 
 
