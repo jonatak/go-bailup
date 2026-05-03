@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.2.0...v1.2.1) (2026-05-03)
+
+
+### Bug Fixes
+
+* update apparmor to allow base homeassistant permission ([518f3e1](https://github.com/jonatak/baillconnect-to-mqtt/commit/518f3e108d4ae5bcab63787f6dce3b6df6219154))
+
 ## [1.2.0](https://github.com/jonatak/baillconnect-to-mqtt/compare/v1.1.0...v1.2.0) (2026-05-03)
 
 
