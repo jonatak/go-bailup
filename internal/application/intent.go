@@ -2,10 +2,14 @@ package application
 
 import "github.com/jonatak/baillconnect-to-mqtt/internal/domain"
 
+// Intent is a user command as received from MQTT; it may still contain relative
+// targets such as current mode or current preset.
 type Intent interface {
 	isIntent()
 }
 
+// ResolvedIntent is ready for the Bailup gateway, with all relative targets
+// expanded against the current HVAC state.
 type ResolvedIntent interface {
 	Intent
 	isResolvedIntent()

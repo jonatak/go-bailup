@@ -1,5 +1,7 @@
 package domain
 
+// TemperatureSettings keeps the comfort/eco relationship valid for the active
+// mode: heating expects comfort above eco, cooling expects eco above comfort.
 type TemperatureSettings struct {
 	comfort float64
 	eco     float64
