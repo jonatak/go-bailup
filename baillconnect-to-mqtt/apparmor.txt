@@ -1,0 +1,23 @@
+#include <tunables/global>
+
+profile baillconnect_to_mqtt flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  # The bridge only needs outbound HTTP(S) to Baillconnect and MQTT to the broker.
+  network inet stream,
+  network inet6 stream,
+
+  signal (send,receive) set=(term,int,hup,cont),
+
+  /app/baillconnect-to-mqtt rix,
+
+  /data/options.json r,
+
+  /etc/hosts r,
+  /etc/nsswitch.conf r,
+  /etc/resolv.conf r,
+  /etc/ssl/certs/** r,
+  /etc/localtime r,
+
+  /tmp/** rwk,
+}
